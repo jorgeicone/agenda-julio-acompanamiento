@@ -8,7 +8,7 @@
   :root{
     --bg:#050d1f; --bg2:#0a1730; --card:#0e1d3a; --line:#1c2f52;
     --cyan:#00d4ff; --purple:#7b2fff; --orange:#ff8c00;
-    --txt:#eaf2ff; --mut:#8ba0c4; --ok:#25d07a; --bad:#ff5470;
+    --txt:#eaf2ff; --mut:#8ba0c4; --ok:#25d07a; --bad:#ff5470; --red:#ff5470;
     --rad:16px; --sh:0 10px 40px rgba(0,0,0,.45);
   }
   *{box-sizing:border-box}
@@ -18,22 +18,34 @@
     background:radial-gradient(1200px 700px at 15% -10%,rgba(123,47,255,.18),transparent 60%),
                radial-gradient(1000px 600px at 110% 10%,rgba(0,212,255,.14),transparent 55%),
                var(--bg);
-    color:var(--txt); min-height:100vh; line-height:1.5;
+    color:var(--txt); min-height:100vh; line-height:1.5; overflow-x:hidden;
   }
-  .wrap{max-width:940px;margin:0 auto;padding:26px 18px 70px}
+  #bgCanvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+  .orb{position:fixed;border-radius:50%;filter:blur(70px);opacity:.55;z-index:0;pointer-events:none;animation:float 20s ease-in-out infinite;will-change:transform}
+  .orb.a{width:360px;height:360px;background:radial-gradient(circle,rgba(0,212,255,.55),transparent 70%);top:-90px;left:-70px}
+  .orb.b{width:440px;height:440px;background:radial-gradient(circle,rgba(123,47,255,.5),transparent 70%);bottom:-140px;right:-90px;animation-delay:-7s}
+  .orb.c{width:280px;height:280px;background:radial-gradient(circle,rgba(255,140,0,.3),transparent 70%);top:42%;left:56%;animation-delay:-13s}
+  @keyframes float{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(34px,-28px) scale(1.06)}66%{transform:translate(-22px,22px) scale(.96)}}
+  .hero-logo{position:fixed;top:54px;right:-30px;width:320px;max-width:46vw;opacity:.55;z-index:0;pointer-events:none;mix-blend-mode:screen;animation:heroFloat 16s ease-in-out infinite;will-change:transform}
+  @keyframes heroFloat{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(26px) rotate(4deg)}}
+  @media(max-width:640px){.hero-logo{opacity:.32;top:120px;width:230px}}
+  .wrap{max-width:940px;margin:0 auto;padding:26px 18px 70px;position:relative;z-index:1}
   header.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:22px;flex-wrap:wrap}
   .brand{display:flex;align-items:center;gap:12px}
-  .logo{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--cyan),var(--purple));display:grid;place-items:center;font-weight:800;color:#04101f;box-shadow:0 0 24px rgba(0,212,255,.4)}
+  .brandimg{width:48px;height:48px;border-radius:13px;object-fit:cover;border:1px solid rgba(0,212,255,.35);animation:logoGlow 3.2s ease-in-out infinite}
+  @keyframes logoGlow{0%,100%{box-shadow:0 0 22px rgba(0,212,255,.4)}50%{box-shadow:0 0 42px rgba(123,47,255,.75)}}
   .brand small{color:var(--mut);display:block;font-size:12px;letter-spacing:.14em;text-transform:uppercase}
   .brand b{font-size:17px}
   .modewrap{display:flex;gap:8px;align-items:center}
   .toggle{background:var(--card);border:1px solid var(--line);color:var(--txt);padding:8px 14px;border-radius:999px;cursor:pointer;font-size:13px;font-weight:600;transition:.2s}
   .toggle:hover{border-color:var(--cyan)}
   .toggle.active{background:linear-gradient(135deg,var(--cyan),var(--purple));color:#04101f;border-color:transparent}
-  h1{font-size:26px;margin:6px 0 4px;font-weight:800}
+  h1{font-size:26px;margin:6px 0 4px;font-weight:800;position:relative;z-index:1}
   h1 span{background:linear-gradient(90deg,var(--cyan),var(--purple),var(--orange));-webkit-background-clip:text;background-clip:text;color:transparent}
-  .sub{color:var(--mut);margin:0 0 20px;font-size:15px}
-  .card{background:linear-gradient(180deg,var(--card),var(--bg2));border:1px solid var(--line);border-radius:var(--rad);padding:20px;box-shadow:var(--sh);margin-bottom:18px}
+  .sub{color:var(--mut);margin:0 0 20px;font-size:15px;position:relative;z-index:1}
+  .card{background:linear-gradient(180deg,rgba(14,29,58,.72),rgba(10,23,48,.66));backdrop-filter:blur(16px) saturate(150%);-webkit-backdrop-filter:blur(16px) saturate(150%);border:1px solid rgba(70,130,210,.28);border-radius:var(--rad);padding:20px;box-shadow:var(--sh);margin-bottom:18px;opacity:0;transform:translateY(18px);animation:rise .55s cubic-bezier(.2,.7,.3,1) forwards}
+  .card:nth-of-type(2){animation-delay:.06s}.card:nth-of-type(3){animation-delay:.12s}.card:nth-of-type(4){animation-delay:.18s}
+  @keyframes rise{to{opacity:1;transform:none}}
   .card h2{font-size:15px;margin:0 0 14px;letter-spacing:.03em;color:var(--cyan);text-transform:uppercase;font-weight:700}
   label{display:block;font-size:13px;color:var(--mut);margin:0 0 5px;font-weight:600}
   input,select{width:100%;background:#08132a;border:1px solid var(--line);border-radius:10px;color:var(--txt);padding:11px 12px;font-size:14px;font-family:inherit}
@@ -41,7 +53,7 @@
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
   .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
   @media(max-width:640px){.grid2,.grid3{grid-template-columns:1fr}}
-  .btn{border:none;border-radius:11px;padding:13px 18px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+  .btn{border:none;border-radius:11px;padding:13px 18px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s;display:inline-flex;align-items:center;justify-content:center;gap:8px;will-change:transform}
   .btn.primary{background:linear-gradient(135deg,var(--cyan),var(--purple));color:#04101f}
   .btn.primary:hover{transform:translateY(-1px);box-shadow:0 8px 26px rgba(0,212,255,.35)}
   .btn.ghost{background:#08132a;border:1px solid var(--line);color:var(--txt)}
@@ -49,16 +61,31 @@
   .btn.wa{background:#25D366;color:#04140a}
   .btn.gc{background:#fff;color:#1a1a1a}
   .btn.block{width:100%}
+  .btn:active{transform:scale(.97)}
+  .calnav{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+  .navbtn{width:40px;height:40px;border-radius:10px;background:#08132a;border:1px solid var(--line);color:var(--txt);font-size:20px;cursor:pointer;line-height:1;transition:.15s}
+  .navbtn:hover{border-color:var(--cyan);color:var(--cyan)}
+  .calnav select{width:auto;flex:1;min-width:120px;font-weight:700}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--mut);margin-bottom:14px}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .lg{width:12px;height:12px;border-radius:4px;display:inline-block}
+  .lg.disp{background:linear-gradient(180deg,rgba(123,47,255,.5),#08132a);border:1px solid var(--purple)}
+  .lg.fest{background:rgba(255,84,112,.18);border:1px solid var(--red)}
+  .lg.hoy{background:#08132a;border:1px solid var(--cyan)}
   .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:7px}
   .dow{text-align:center;font-size:11px;color:var(--mut);font-weight:700;padding:4px 0;text-transform:uppercase;letter-spacing:.05em}
-  .day{aspect-ratio:1/1;border:1px solid var(--line);border-radius:11px;background:#08132a;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative;transition:.15s;font-weight:600;font-size:15px}
+  .day{aspect-ratio:1/1;border:1px solid var(--line);border-radius:11px;background:#08132a;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative;transition:.15s;font-weight:600;font-size:15px;will-change:transform}
   .day.empty{background:transparent;border:none;cursor:default}
   .day.past{opacity:.28;cursor:not-allowed}
-  .day:not(.empty):not(.past):hover{border-color:var(--cyan)}
+  .day:not(.empty):not(.past):hover{border-color:var(--cyan);transform:translateY(-2px)}
+  .day.today{box-shadow:inset 0 0 0 1px var(--cyan)}
+  .day.holiday{color:var(--red);border-color:rgba(255,84,112,.55);background:rgba(255,84,112,.08)}
   .day.has{border-color:var(--purple);background:linear-gradient(180deg,rgba(123,47,255,.22),#08132a)}
-  .day.sel{background:linear-gradient(135deg,var(--cyan),var(--purple));color:#04101f;border-color:transparent}
+  .day.has.holiday{background:linear-gradient(180deg,rgba(123,47,255,.22),rgba(255,84,112,.10));color:var(--txt)}
+  .day.sel{background:linear-gradient(135deg,var(--cyan),var(--purple))!important;color:#04101f!important;border-color:transparent}
   .day .dot{width:6px;height:6px;border-radius:50%;background:var(--cyan);margin-top:4px}
   .day.sel .dot{background:#04101f}
+  .day .fdot{position:absolute;bottom:5px;width:5px;height:5px;border-radius:50%;background:var(--red)}
   .day .cnt{position:absolute;top:5px;right:7px;font-size:10px;color:var(--cyan)}
   .day.sel .cnt{color:#04101f}
   .slots{display:flex;flex-wrap:wrap;gap:9px;margin-top:6px}
@@ -68,14 +95,18 @@
   .chip{display:inline-flex;align-items:center;gap:6px;background:#08132a;border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:13px;margin:4px 6px 0 0}
   .chip button{background:none;border:none;color:var(--bad);cursor:pointer;font-size:15px;line-height:1;padding:0}
   .muted{color:var(--mut);font-size:13px}
-  .rowend{display:flex;gap:10px;align-items:flex-end}
-  .rowend > div{flex:1}
+  .rowend{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+  .rowend > div{flex:1;min-width:130px}
   .rowend .btn{white-space:nowrap}
+  .presets{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .preset{background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.3);color:var(--cyan);border-radius:999px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer}
+  .preset:hover{background:rgba(0,212,255,.2)}
   .linkbox{display:flex;gap:8px;margin-top:12px}
   .linkbox input{font-size:13px}
   .pill{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700;background:rgba(0,212,255,.14);color:var(--cyan);border:1px solid rgba(0,212,255,.3)}
-  .steps{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
-  .step{flex:1;min-width:150px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+  .pill.red{background:rgba(255,84,112,.14);color:var(--red);border-color:rgba(255,84,112,.4)}
+  .steps{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;position:relative;z-index:1}
+  .step{flex:1;min-width:150px;background:rgba(14,29,58,.6);backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
   .step b{color:var(--cyan)}
   .who{display:grid;grid-template-columns:1fr 1fr;gap:12px}
   .who .opt{border:1px solid var(--line);border-radius:12px;padding:16px;text-align:center;cursor:pointer;background:#08132a;font-weight:700;transition:.15s}
@@ -90,18 +121,22 @@
   .summary .row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.06)}
   .summary .row:last-child{border:none}
   .hidden{display:none!important}
-  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--ok);color:#04140a;padding:12px 20px;border-radius:12px;font-weight:700;box-shadow:var(--sh);opacity:0;transition:.3s;pointer-events:none}
+  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--ok);color:#04140a;padding:12px 20px;border-radius:12px;font-weight:700;box-shadow:var(--sh);opacity:0;transition:.3s;pointer-events:none;z-index:9}
   .toast.show{opacity:1}
   footer{text-align:center;color:var(--mut);font-size:12px;margin-top:30px}
   .note{font-size:12px;color:var(--mut);margin-top:8px}
   .divider{height:1px;background:var(--line);margin:16px 0}
+  @media(prefers-reduced-motion:reduce){.orb,.brandimg,.hero-logo,.card{animation:none;opacity:1;transform:none}}
 </style>
 </head>
 <body>
+<canvas id="bgCanvas"></canvas>
+<div class="orb a"></div><div class="orb b"></div><div class="orb c"></div>
+<img src="logo.png" class="hero-logo" alt="">
 <div class="wrap">
   <header class="top">
     <div class="brand">
-      <div class="logo">IC</div>
+      <img src="logo.png" class="brandimg" alt="ICONE ialabs">
       <div><small>ICONE ialabs</small><b>Acompañamiento Estratégico</b></div>
     </div>
     <div class="modewrap" id="modeSwitch">
@@ -112,8 +147,8 @@
 
   <!-- ================= ADMIN ================= -->
   <section id="adminView">
-    <h1>Configura tu <span>disponibilidad</span> de julio</h1>
-    <p class="sub">Marca los días y las horas en que puedes atender. Luego genera el enlace y envíaselo a Diego y a Ana María.</p>
+    <h1>Configura tu <span>disponibilidad</span></h1>
+    <p class="sub">Elige mes y año, marca cada día y añade las horas exactas en que puedes atender (varias por día). Luego genera el enlace y envíaselo a Diego y a Ana María.</p>
 
     <div class="card">
       <h2>1 · Tus datos de contacto</h2>
@@ -134,20 +169,41 @@
     </div>
 
     <div class="card">
-      <h2>2 · Elige un día de julio y añade horarios</h2>
+      <h2>2 · Elige mes, día y añade horarios</h2>
+      <div class="calnav">
+        <button class="navbtn" data-nav="admin" data-dir="-1">‹</button>
+        <select id="admSelM"></select>
+        <select id="admSelY"></select>
+        <button class="navbtn" data-nav="admin" data-dir="1">›</button>
+      </div>
+      <div class="legend">
+        <span><i class="lg disp"></i> Con horarios</span>
+        <span><i class="lg fest"></i> Festivo Colombia</span>
+        <span><i class="lg hoy"></i> Hoy</span>
+      </div>
       <div class="cal" id="adminCal"></div>
       <div id="adminDayPanel" class="hidden">
         <div class="divider"></div>
-        <p style="margin:0 0 10px"><span class="pill" id="adminDayLabel"></span></p>
+        <p style="margin:0 0 10px"><span class="pill" id="adminDayLabel"></span> <span class="pill red hidden" id="adminHolLabel"></span></p>
         <div class="rowend">
           <div>
-            <label>Hora de inicio</label>
+            <label>Momento del día (hora de inicio)</label>
             <input id="timeInput" type="time" value="09:00">
           </div>
-          <button class="btn primary" id="addSlot">+ Añadir</button>
+          <button class="btn primary" id="addSlot">+ Añadir hora</button>
+        </div>
+        <div class="presets" id="presets">
+          <span class="preset" data-t="08:00">08:00</span>
+          <span class="preset" data-t="09:00">09:00</span>
+          <span class="preset" data-t="10:00">10:00</span>
+          <span class="preset" data-t="11:00">11:00</span>
+          <span class="preset" data-t="14:00">14:00</span>
+          <span class="preset" data-t="15:00">15:00</span>
+          <span class="preset" data-t="16:00">16:00</span>
+          <span class="preset" data-t="18:00">18:00</span>
         </div>
         <div id="adminSlots" style="margin-top:12px"></div>
-        <p class="note">Tip: puedes añadir varios horarios al mismo día (ej. 09:00, 11:00, 15:00).</p>
+        <p class="note">Puedes añadir todos los momentos que quieras al mismo día (ej. 08:00, 11:00, 15:00 y 18:00). Cada uno será una opción que el cliente podrá elegir.</p>
       </div>
     </div>
 
@@ -160,9 +216,9 @@
         <button class="btn ghost" id="copyLink">Copiar</button>
       </div>
       <div class="linkbox hidden" id="waShareBox">
-        <button class="btn wa block" id="waShareDiego">Enviar a Diego por WhatsApp</button>
+        <button class="btn wa block" id="waShareDiego">Enviar el enlace por WhatsApp</button>
       </div>
-      <p class="note hidden" id="linkHelp">Este enlace ya incluye tu disponibilidad. Cuando lo abran, verán solo tus horarios libres. Si cambias algo, vuelve a generar el enlace.</p>
+      <p class="note hidden" id="linkHelp">Este enlace ya incluye toda tu disponibilidad (de cualquier mes). Cuando cambies algo, vuelve a generar el enlace y reenvíalo.</p>
     </div>
   </section>
 
@@ -197,10 +253,20 @@
 
     <div class="card" id="calCard">
       <h2>Elige el día</h2>
+      <div class="calnav">
+        <button class="navbtn" data-nav="client" data-dir="-1">‹</button>
+        <select id="cliSelM"></select>
+        <select id="cliSelY"></select>
+        <button class="navbtn" data-nav="client" data-dir="1">›</button>
+      </div>
+      <div class="legend">
+        <span><i class="lg disp"></i> Disponible</span>
+        <span><i class="lg fest"></i> Festivo Colombia</span>
+      </div>
       <div class="cal" id="clientCal"></div>
       <div id="clientSlotsWrap" class="hidden">
         <div class="divider"></div>
-        <p style="margin:0 0 8px"><span class="pill" id="clientDayLabel"></span></p>
+        <p style="margin:0 0 8px"><span class="pill" id="clientDayLabel"></span> <span class="pill red hidden" id="clientHolLabel"></span></p>
         <div class="slots" id="clientSlots"></div>
       </div>
     </div>
@@ -221,7 +287,7 @@
     </div>
   </section>
 
-  <footer>ICONE ialabs · Agendamiento de acompañamiento estratégico · Julio 2026</footer>
+  <footer>ICONE ialabs · Agendamiento de acompañamiento estratégico</footer>
 </div>
 
 <div class="toast" id="toast">Copiado</div>
@@ -229,49 +295,98 @@
 <script>
 (function(){
   "use strict";
-  var MONTH=6, YEAR=2026; // Julio 2026 (mes 0-indexado)
   var DOW=["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
-  var MES="julio";
-  var state={ wa:"", mail:"", dur:60, slots:{} }; // slots["2026-07-03"]=["09:00",...]
+  var MESES=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+  var MESES_CAP=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+  var state={ wa:"", mail:"", dur:60, slots:{} };
+  var curY, curM;
   var adminSelDay=null;
-  var client={ who:null, sess:null, day:null, time:null };
+  var client={ who:null, sess:null, y:null, m:null, day:null, time:null };
+  var holCache={};
 
-  /* ---------- utilidades ---------- */
   function pad(n){return (n<10?"0":"")+n;}
-  function keyOf(d){return YEAR+"-"+pad(MONTH+1)+"-"+pad(d);}
+  function keyOf(y,m,d){return y+"-"+pad(m+1)+"-"+pad(d);}
   function todayMidnight(){var t=new Date();t.setHours(0,0,0,0);return t;}
   function b64enc(obj){return btoa(unescape(encodeURIComponent(JSON.stringify(obj))));}
   function b64dec(s){try{return JSON.parse(decodeURIComponent(escape(atob(s))));}catch(e){return null;}}
   function toast(m){var t=document.getElementById("toast");t.textContent=m||"Listo";t.classList.add("show");setTimeout(function(){t.classList.remove("show");},1600);}
-  function fmtLong(d){ // d = número de día
-    var date=new Date(YEAR,MONTH,d);
-    return DOW[date.getDay()]+" "+d+" de "+MES;
-  }
-  function fmt12(t){ // "14:00" -> "2:00 p.m."
-    var p=t.split(":"),h=parseInt(p[0],10),m=p[1];
-    var ap=h<12?"a.m.":"p.m.";var h12=h%12; if(h12===0)h12=12;
-    return h12+":"+m+" "+ap;
-  }
-  function addMin(t,min){
-    var p=t.split(":"),d=new Date(YEAR,MONTH,1,parseInt(p[0],10),parseInt(p[1],10));
-    d.setMinutes(d.getMinutes()+min);
-    return pad(d.getHours())+":"+pad(d.getMinutes());
+  function fmtLong(y,m,d){var date=new Date(y,m,d);return DOW[date.getDay()]+" "+d+" de "+MESES[m]+" de "+y;}
+  function fmt12(t){var p=t.split(":"),h=parseInt(p[0],10),m=p[1];var ap=h<12?"a.m.":"p.m.";var h12=h%12;if(h12===0)h12=12;return h12+":"+m+" "+ap;}
+  function addMin(t,min){var p=t.split(":"),d=new Date(2000,0,1,parseInt(p[0],10),parseInt(p[1],10));d.setMinutes(d.getMinutes()+min);return pad(d.getHours())+":"+pad(d.getMinutes());}
+
+  function easter(y){var a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),mo=Math.floor((h+l-7*m+114)/31),da=((h+l-7*m+114)%31)+1;return new Date(y,mo-1,da);}
+  function holidays(y){
+    if(holCache[y])return holCache[y];
+    var H={};
+    function put(dt,name){H[keyOf(dt.getFullYear(),dt.getMonth(),dt.getDate())]=name;}
+    function emil(dt){var d=new Date(dt);while(d.getDay()!==1)d.setDate(d.getDate()+1);return d;}
+    var E=easter(y);
+    function off(n){var d=new Date(E);d.setDate(d.getDate()+n);return d;}
+    put(new Date(y,0,1),"Año Nuevo");
+    put(new Date(y,4,1),"Día del Trabajo");
+    put(new Date(y,6,20),"Día de la Independencia");
+    put(new Date(y,7,7),"Batalla de Boyacá");
+    put(new Date(y,11,8),"Inmaculada Concepción");
+    put(new Date(y,11,25),"Navidad");
+    put(emil(new Date(y,0,6)),"Reyes Magos");
+    put(emil(new Date(y,2,19)),"San José");
+    put(emil(new Date(y,5,29)),"San Pedro y San Pablo");
+    put(emil(new Date(y,7,15)),"Asunción de la Virgen");
+    put(emil(new Date(y,9,12)),"Día de la Raza");
+    put(emil(new Date(y,10,1)),"Todos los Santos");
+    put(emil(new Date(y,10,11)),"Independencia de Cartagena");
+    put(off(-3),"Jueves Santo");
+    put(off(-2),"Viernes Santo");
+    put(emil(off(39)),"Ascensión del Señor");
+    put(emil(off(60)),"Corpus Christi");
+    put(emil(off(68)),"Sagrado Corazón");
+    holCache[y]=H;return H;
   }
 
-  /* ---------- render calendario ---------- */
+  function fillSelectors(selM,selY,mode){
+    var m=document.getElementById(selM),ye=document.getElementById(selY);
+    m.innerHTML="";ye.innerHTML="";
+    for(var i=0;i<12;i++){var o=document.createElement("option");o.value=i;o.textContent=MESES_CAP[i];if(i===curM)o.selected=true;m.appendChild(o);}
+    var y0=new Date().getFullYear();
+    for(var y=y0;y<=y0+2;y++){var o2=document.createElement("option");o2.value=y;o2.textContent=y;if(y===curY)o2.selected=true;ye.appendChild(o2);}
+    m.onchange=function(){curM=parseInt(m.value,10);rebuild(mode);};
+    ye.onchange=function(){curY=parseInt(ye.value,10);rebuild(mode);};
+  }
+  function navMonth(mode,dir){
+    curM+=dir;
+    if(curM>11){curM=0;curY++;}
+    if(curM<0){curM=11;curY--;}
+    var y0=new Date().getFullYear();
+    if(curY<y0)curY=y0; if(curY>y0+2)curY=y0+2;
+    rebuild(mode);
+  }
+  function rebuild(mode){
+    if(mode==="admin"){
+      adminSelDay=null;document.getElementById("adminDayPanel").classList.add("hidden");
+      fillSelectors("admSelM","admSelY","admin");buildCal("adminCal","admin");
+    }else{
+      document.getElementById("clientSlotsWrap").classList.add("hidden");
+      fillSelectors("cliSelM","cliSelY","client");buildCal("clientCal","client");
+    }
+  }
+
   function buildCal(elId, mode){
     var el=document.getElementById(elId); el.innerHTML="";
     for(var i=0;i<7;i++){var h=document.createElement("div");h.className="dow";h.textContent=DOW[i];el.appendChild(h);}
-    var first=new Date(YEAR,MONTH,1).getDay();
-    var days=new Date(YEAR,MONTH+1,0).getDate();
+    var first=new Date(curY,curM,1).getDay();
+    var days=new Date(curY,curM+1,0).getDate();
     for(var e=0;e<first;e++){var em=document.createElement("div");em.className="day empty";el.appendChild(em);}
-    var tm=todayMidnight();
+    var tm=todayMidnight(); var H=holidays(curY);
     for(var d=1;d<=days;d++){
       var cell=document.createElement("div"); cell.className="day"; cell.dataset.day=d;
       var num=document.createElement("div"); num.textContent=d; cell.appendChild(num);
-      var cellDate=new Date(YEAR,MONTH,d);
+      var cellDate=new Date(curY,curM,d);
       var isPast=cellDate<tm;
-      var slots=state.slots[keyOf(d)]||[];
+      var isToday=cellDate.getTime()===tm.getTime();
+      var hol=H[keyOf(curY,curM,d)];
+      var slots=state.slots[keyOf(curY,curM,d)]||[];
+      if(isToday)cell.classList.add("today");
+      if(hol){cell.classList.add("holiday");cell.title=hol;var fd=document.createElement("div");fd.className="fdot";cell.appendChild(fd);}
       if(mode==="admin"){
         if(isPast){cell.classList.add("past");}
         else{
@@ -290,18 +405,20 @@
     }
   }
 
-  /* ---------- ADMIN ---------- */
   function selectAdminDay(d){
     adminSelDay=d;
     document.querySelectorAll("#adminCal .day").forEach(function(c){c.classList.remove("sel");});
     var cell=document.querySelector('#adminCal .day[data-day="'+d+'"]'); if(cell)cell.classList.add("sel");
     document.getElementById("adminDayPanel").classList.remove("hidden");
-    document.getElementById("adminDayLabel").textContent=fmtLong(d);
+    document.getElementById("adminDayLabel").textContent=fmtLong(curY,curM,d);
+    var hol=holidays(curY)[keyOf(curY,curM,d)];
+    var hl=document.getElementById("adminHolLabel");
+    if(hol){hl.textContent="Festivo: "+hol;hl.classList.remove("hidden");}else{hl.classList.add("hidden");}
     renderAdminSlots();
   }
   function renderAdminSlots(){
     var wrap=document.getElementById("adminSlots"); wrap.innerHTML="";
-    var arr=(state.slots[keyOf(adminSelDay)]||[]).slice().sort();
+    var arr=(state.slots[keyOf(curY,curM,adminSelDay)]||[]).slice().sort();
     if(!arr.length){wrap.innerHTML='<span class="muted">Sin horarios para este día todavía.</span>';}
     arr.forEach(function(t){
       var chip=document.createElement("span");chip.className="chip";
@@ -311,27 +428,24 @@
       chip.appendChild(x); wrap.appendChild(chip);
     });
   }
-  function addSlot(){
+  function addTime(t){
     if(adminSelDay==null){toast("Elige un día primero");return;}
-    var t=document.getElementById("timeInput").value; if(!t)return;
-    var k=keyOf(adminSelDay);
+    if(!t)return;
+    var k=keyOf(curY,curM,adminSelDay);
     if(!state.slots[k])state.slots[k]=[];
     if(state.slots[k].indexOf(t)===-1)state.slots[k].push(t);
     renderAdminSlots(); buildCal("adminCal","admin"); reSelectAdmin(); updateAdminSummary();
   }
   function removeSlot(t){
-    var k=keyOf(adminSelDay);
+    var k=keyOf(curY,curM,adminSelDay);
     state.slots[k]=(state.slots[k]||[]).filter(function(x){return x!==t;});
     if(!state.slots[k].length)delete state.slots[k];
     renderAdminSlots(); buildCal("adminCal","admin"); reSelectAdmin(); updateAdminSummary();
   }
-  function reSelectAdmin(){
-    var cell=document.querySelector('#adminCal .day[data-day="'+adminSelDay+'"]');
-    if(cell)cell.classList.add("sel");
-  }
+  function reSelectAdmin(){var cell=document.querySelector('#adminCal .day[data-day="'+adminSelDay+'"]');if(cell)cell.classList.add("sel");}
   function updateAdminSummary(){
-    var days=Object.keys(state.slots).length;
-    var total=0;Object.keys(state.slots).forEach(function(k){total+=state.slots[k].length;});
+    var days=Object.keys(state.slots).length,total=0;
+    Object.keys(state.slots).forEach(function(k){total+=state.slots[k].length;});
     var el=document.getElementById("adminSummaryLine");
     if(!total){el.textContent="Aún no has añadido horarios.";}
     else{el.innerHTML="Tienes <b style='color:var(--cyan)'>"+total+"</b> horario(s) disponibles en <b style='color:var(--cyan)'>"+days+"</b> día(s).";}
@@ -353,29 +467,27 @@
     document.getElementById("linkResult").classList.remove("hidden");
     document.getElementById("waShareBox").classList.remove("hidden");
     document.getElementById("linkHelp").classList.remove("hidden");
-    // botón compartir
     var msg="Hola, este es el enlace para que agendes tus sesiones de acompañamiento estratégico (2, 3 y 4). Elige el horario que prefieras: "+link;
-    document.getElementById("waShareDiego").onclick=function(){
-      window.open("https://wa.me/?text="+encodeURIComponent(msg),"_blank");
-    };
+    document.getElementById("waShareDiego").onclick=function(){window.open("https://wa.me/?text="+encodeURIComponent(msg),"_blank");};
     toast("Enlace generado");
   }
 
-  /* ---------- CLIENTE ---------- */
   function selectClientDay(d){
-    client.day=d; client.time=null;
+    client.y=curY;client.m=curM;client.day=d;client.time=null;
     document.querySelectorAll("#clientCal .day").forEach(function(c){c.classList.remove("sel");});
     var cell=document.querySelector('#clientCal .day[data-day="'+d+'"]'); if(cell)cell.classList.add("sel");
     document.getElementById("clientSlotsWrap").classList.remove("hidden");
-    document.getElementById("clientDayLabel").textContent=fmtLong(d);
+    document.getElementById("clientDayLabel").textContent=fmtLong(curY,curM,d);
+    var hol=holidays(curY)[keyOf(curY,curM,d)];
+    var hl=document.getElementById("clientHolLabel");
+    if(hol){hl.textContent="Festivo: "+hol;hl.classList.remove("hidden");}else{hl.classList.add("hidden");}
     var wrap=document.getElementById("clientSlots"); wrap.innerHTML="";
-    (state.slots[keyOf(d)]||[]).slice().sort().forEach(function(t){
+    (state.slots[keyOf(curY,curM,d)]||[]).slice().sort().forEach(function(t){
       var s=document.createElement("div");s.className="slot";s.textContent=fmt12(t);
       s.addEventListener("click",function(){
         client.time=t;
         document.querySelectorAll("#clientSlots .slot").forEach(function(x){x.classList.remove("sel");});
-        s.classList.add("sel");
-        renderConfirm();
+        s.classList.add("sel");renderConfirm();
       });
       wrap.appendChild(s);
     });
@@ -386,106 +498,127 @@
     var card=document.getElementById("confirmCard");
     if(!ok){card.classList.add("hidden");return;}
     card.classList.remove("hidden");
-    var box=document.getElementById("summaryBox");
-    box.innerHTML=
-      row("Quién",client.who)+
-      row("Sesión",client.sess)+
-      row("Fecha",fmtLong(client.day)+" de "+YEAR)+
+    document.getElementById("summaryBox").innerHTML=
+      row("Quién",client.who)+row("Sesión",client.sess)+
+      row("Fecha",fmtLong(client.y,client.m,client.day))+
       row("Hora",fmt12(client.time)+" ("+state.dur+" min)");
     card.scrollIntoView({behavior:"smooth",block:"nearest"});
   }
   function row(a,b){return '<div class="row"><span class="muted">'+a+'</span><b>'+b+'</b></div>';}
-
   function gcalUrl(){
-    var start=YEAR+pad(MONTH+1)+pad(client.day)+"T"+client.time.replace(":","")+"00";
+    var start=client.y+pad(client.m+1)+pad(client.day)+"T"+client.time.replace(":","")+"00";
     var endT=addMin(client.time,state.dur);
-    var end=YEAR+pad(MONTH+1)+pad(client.day)+"T"+endT.replace(":","")+"00";
+    var end=client.y+pad(client.m+1)+pad(client.day)+"T"+endT.replace(":","")+"00";
     var title="Acompañamiento Estratégico · "+client.sess+" · "+client.who;
     var details="Sesión de acompañamiento estratégico con Jorge Hugo Pérez (ICONE ialabs).\nParticipante: "+client.who+"\n"+client.sess;
     var u="https://calendar.google.com/calendar/render?action=TEMPLATE"+
-      "&text="+encodeURIComponent(title)+
-      "&dates="+start+"/"+end+
-      "&ctz=America/Bogota"+
-      "&details="+encodeURIComponent(details)+
-      "&location="+encodeURIComponent("Sesión virtual");
+      "&text="+encodeURIComponent(title)+"&dates="+start+"/"+end+"&ctz=America/Bogota"+
+      "&details="+encodeURIComponent(details)+"&location="+encodeURIComponent("Sesión virtual");
     if(state.mail)u+="&add="+encodeURIComponent(state.mail);
     return u;
   }
   function waUrl(){
-    var msg="Hola Jorge 👋 Quiero confirmar mi cita de acompañamiento estratégico:\\n"+
-      "• Quién: "+client.who+"\\n"+
-      "• "+client.sess+"\\n"+
-      "• Fecha: "+fmtLong(client.day)+" de "+YEAR+"\\n"+
-      "• Hora: "+fmt12(client.time)+" ("+state.dur+" min)\\n"+
+    var msg="Hola Jorge 👋 Quiero confirmar mi cita de acompañamiento estratégico:\n"+
+      "• Quién: "+client.who+"\n• "+client.sess+"\n"+
+      "• Fecha: "+fmtLong(client.y,client.m,client.day)+"\n"+
+      "• Hora: "+fmt12(client.time)+" ("+state.dur+" min)\n"+
       "Ya lo agregué a mi calendario. ¿Me confirmas?";
     var base=state.wa?("https://wa.me/"+state.wa):"https://wa.me/";
-    return base+"?text="+encodeURIComponent(msg.replace(/\\n/g,"\n"));
+    return base+"?text="+encodeURIComponent(msg);
   }
 
-  /* ---------- init ---------- */
+  function firstAvailable(){
+    var keys=Object.keys(state.slots).sort();
+    if(!keys.length)return null;
+    var p=keys[0].split("-");return {y:parseInt(p[0],10),m:parseInt(p[1],10)-1};
+  }
   function showMode(mode){
     var admin=mode==="admin";
     document.getElementById("adminView").classList.toggle("hidden",!admin);
     document.getElementById("clientView").classList.toggle("hidden",admin);
     document.getElementById("btnAdmin").classList.toggle("active",admin);
     document.getElementById("btnClient").classList.toggle("active",!admin);
-    if(admin){buildCal("adminCal","admin");updateAdminSummary();}
-    else{initClient();}
+    if(admin){
+      var now=new Date();curY=now.getFullYear();curM=now.getMonth();
+      fillSelectors("admSelM","admSelY","admin");buildCal("adminCal","admin");updateAdminSummary();
+    }else{ initClient(); }
   }
   function initClient(){
     var has=Object.keys(state.slots).length>0;
     document.getElementById("noConfig").classList.toggle("hidden",has);
     document.getElementById("sessCard").classList.toggle("hidden",!has);
     document.getElementById("calCard").classList.toggle("hidden",!has);
-    if(has)buildCal("clientCal","client");
-  }
-
-  function loadFromHash(){
-    var h=location.hash||"";
-    var m=h.match(/c=([^&]+)/);
-    if(m){
-      var obj=b64dec(m[1]);
-      if(obj){state.wa=obj.wa||"";state.mail=obj.mail||"";state.dur=obj.dur||60;state.slots=obj.slots||{};return true;}
+    if(has){
+      var fa=firstAvailable();var now=new Date();
+      curY=fa?fa.y:now.getFullYear();curM=fa?fa.m:now.getMonth();
+      fillSelectors("cliSelM","cliSelY","client");buildCal("clientCal","client");
     }
+  }
+  function loadFromHash(){
+    var m=(location.hash||"").match(/c=([^&]+)/);
+    if(m){var obj=b64dec(m[1]);if(obj){state.wa=obj.wa||"";state.mail=obj.mail||"";state.dur=obj.dur||60;state.slots=obj.slots||{};return true;}}
     return false;
   }
 
-  // eventos admin
-  document.getElementById("addSlot").addEventListener("click",addSlot);
-  document.getElementById("timeInput").addEventListener("keydown",function(e){if(e.key==="Enter")addSlot();});
+  document.getElementById("addSlot").addEventListener("click",function(){addTime(document.getElementById("timeInput").value);});
+  document.getElementById("timeInput").addEventListener("keydown",function(e){if(e.key==="Enter")addTime(this.value);});
+  document.getElementById("presets").addEventListener("click",function(e){var p=e.target.closest(".preset");if(p)addTime(p.dataset.t);});
   document.getElementById("genLink").addEventListener("click",genLink);
   document.getElementById("copyLink").addEventListener("click",function(){
     var i=document.getElementById("clientLink");i.select();
     navigator.clipboard.writeText(i.value).then(function(){toast("Enlace copiado");},function(){document.execCommand("copy");toast("Enlace copiado");});
   });
-  // eventos cliente
-  document.getElementById("whoPick").addEventListener("click",function(e){
-    var o=e.target.closest(".opt");if(!o)return;
-    document.querySelectorAll("#whoPick .opt").forEach(function(x){x.classList.remove("sel");});
-    o.classList.add("sel");client.who=o.dataset.who;renderConfirm();
-  });
-  document.getElementById("sessPick").addEventListener("click",function(e){
-    var o=e.target.closest(".opt");if(!o)return;
-    document.querySelectorAll("#sessPick .opt").forEach(function(x){x.classList.remove("sel");});
-    o.classList.add("sel");client.sess=o.dataset.sess;renderConfirm();
-  });
+  document.querySelectorAll(".navbtn").forEach(function(b){b.addEventListener("click",function(){navMonth(b.dataset.nav,parseInt(b.dataset.dir,10));});});
+  document.getElementById("whoPick").addEventListener("click",function(e){var o=e.target.closest(".opt");if(!o)return;document.querySelectorAll("#whoPick .opt").forEach(function(x){x.classList.remove("sel");});o.classList.add("sel");client.who=o.dataset.who;renderConfirm();});
+  document.getElementById("sessPick").addEventListener("click",function(e){var o=e.target.closest(".opt");if(!o)return;document.querySelectorAll("#sessPick .opt").forEach(function(x){x.classList.remove("sel");});o.classList.add("sel");client.sess=o.dataset.sess;renderConfirm();});
   document.getElementById("gcalBtn").addEventListener("click",function(){window.open(gcalUrl(),"_blank");});
   document.getElementById("waBtn").addEventListener("click",function(){window.open(waUrl(),"_blank");});
-  // switch
   document.getElementById("btnAdmin").addEventListener("click",function(){showMode("admin");});
   document.getElementById("btnClient").addEventListener("click",function(){showMode("client");});
 
-  // arranque: si el enlace trae config -> vista cliente; si no -> admin
   var hasConfig=loadFromHash();
   if(hasConfig){
     if(state.wa)document.getElementById("waNumber").value=state.wa;
     if(state.mail)document.getElementById("gEmail").value=state.mail;
     document.getElementById("dur").value=state.dur;
     showMode("client");
-  } else {
+  }else{
     document.getElementById("gEmail").value="jorgeicone.com@gmail.com";
     showMode("admin");
   }
+})();
+
+/* ---------- Red neuronal + partículas (fondo) ---------- */
+(function(){
+  var c=document.getElementById("bgCanvas"); if(!c)return;
+  if(window.matchMedia&&window.matchMedia("(prefers-reduced-motion:reduce)").matches)return;
+  var x=c.getContext("2d"), w,h,dpr, nodes=[], parts=[];
+  function size(){dpr=Math.min(window.devicePixelRatio||1,2);w=c.width=innerWidth*dpr;h=c.height=innerHeight*dpr;c.style.width=innerWidth+"px";c.style.height=innerHeight+"px";}
+  size(); addEventListener("resize",size);
+  var N=Math.round((innerWidth*innerHeight)/24000); N=Math.max(26,Math.min(64,N));
+  for(var i=0;i<N;i++)nodes.push({x:Math.random()*w,y:Math.random()*h,vx:(Math.random()-.5)*.28*dpr,vy:(Math.random()-.5)*.28*dpr,r:(Math.random()*1.5+.8)*dpr});
+  for(var j=0;j<46;j++)parts.push({x:Math.random()*w,y:Math.random()*h,vy:-(Math.random()*.3+.08)*dpr,vx:(Math.random()-.5)*.14*dpr,r:(Math.random()*1.1+.3)*dpr,a:Math.random()*.5+.2});
+  var mouse={x:-9999,y:-9999};
+  addEventListener("mousemove",function(e){mouse.x=e.clientX*dpr;mouse.y=e.clientY*dpr;});
+  addEventListener("mouseout",function(){mouse.x=-9999;mouse.y=-9999;});
+  var MAXD=140*dpr;
+  function loop(){
+    x.clearRect(0,0,w,h);
+    for(var i=0;i<nodes.length;i++){var a=nodes[i];
+      for(var k=i+1;k<nodes.length;k++){var b=nodes[k],dx=a.x-b.x,dy=a.y-b.y,d=Math.sqrt(dx*dx+dy*dy);
+        if(d<MAXD){var al=(1-d/MAXD)*.20;x.strokeStyle="rgba(0,212,255,"+al+")";x.lineWidth=.6*dpr;x.beginPath();x.moveTo(a.x,a.y);x.lineTo(b.x,b.y);x.stroke();}}
+      var mdx=a.x-mouse.x,mdy=a.y-mouse.y,md=Math.sqrt(mdx*mdx+mdy*mdy);
+      if(md<MAXD*1.5){var mal=(1-md/(MAXD*1.5))*.55;x.strokeStyle="rgba(123,47,255,"+mal+")";x.lineWidth=.9*dpr;x.beginPath();x.moveTo(a.x,a.y);x.lineTo(mouse.x,mouse.y);x.stroke();}
+    }
+    for(var n2=0;n2<nodes.length;n2++){var n=nodes[n2];n.x+=n.vx;n.y+=n.vy;
+      if(n.x<0||n.x>w)n.vx*=-1; if(n.y<0||n.y>h)n.vy*=-1;
+      x.fillStyle="rgba(0,212,255,.9)";x.beginPath();x.arc(n.x,n.y,n.r,0,6.2832);x.fill();
+      x.fillStyle="rgba(0,212,255,.10)";x.beginPath();x.arc(n.x,n.y,n.r*3.2,0,6.2832);x.fill();}
+    for(var p=0;p<parts.length;p++){var pt=parts[p];pt.x+=pt.vx;pt.y+=pt.vy;if(pt.y<0){pt.y=h;pt.x=Math.random()*w;}
+      x.fillStyle="rgba(255,140,0,"+pt.a*.5+")";x.beginPath();x.arc(pt.x,pt.y,pt.r,0,6.2832);x.fill();}
+    requestAnimationFrame(loop);
+  }
+  loop();
 })();
 </script>
 </body>
