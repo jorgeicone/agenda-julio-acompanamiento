@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Agenda tu sesión · ICONE ialabs</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root{
     --bg:#050d1f; --bg2:#0a1730; --card:#0e1d3a; --line:#1c2f52;
@@ -121,6 +122,8 @@
   .summary{border:1px dashed var(--cyan);border-radius:12px;padding:16px;background:rgba(0,212,255,.06)}
   .summary .row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.06)}
   .summary .row:last-child{border:none}
+  .citarow{display:flex;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;background:#08132a;font-size:14px}
+  .citarow b{color:var(--cyan)}
   .hidden{display:none!important}
   .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--ok);color:#04140a;padding:12px 20px;border-radius:12px;font-weight:700;box-shadow:var(--sh);opacity:0;transition:.3s;pointer-events:none;z-index:9}
   .toast.show{opacity:1}
@@ -140,7 +143,7 @@
       <img src="logo.png" class="brandimg" alt="ICONE ialabs">
       <div><small>ICONE ialabs</small><b>Acompañamiento Estratégico</b></div>
     </div>
-    <div class="modewrap" id="modeSwitch">
+    <div class="modewrap hidden" id="modeSwitch">
       <button class="toggle" data-mode="client" id="btnClient">Vista cliente</button>
       <button class="toggle active" data-mode="admin" id="btnAdmin">Admin</button>
     </div>
@@ -148,7 +151,7 @@
 
   <section id="adminView">
     <h1>Configura tu <span>disponibilidad</span></h1>
-    <p class="sub">Elige mes y año, toca un día y marca las horas en que puedes atender. Luego genera el enlace y envíaselo a Diego y a Ana María.</p>
+    <p class="sub">Elige mes y año, toca un día y marca las horas en que puedes atender. Todo se guarda solo en la nube. Comparte el enlace del cliente con Diego y Ana María.</p>
 
     <div class="card">
       <h2>1 · Tus datos de contacto</h2>
@@ -185,7 +188,7 @@
       <div id="adminDayPanel" class="hidden">
         <div class="divider"></div>
         <p style="margin:0 0 6px;font-size:16px"><b>Horarios del <span id="adminDayLabel" style="color:var(--cyan)"></span></b> <span class="pill red hidden" id="adminHolLabel"></span></p>
-        <p class="note" style="margin:0 0 14px">👉 Toca las horas en que <b>sí</b> puedes atender ese día. Se ponen en <b style="color:var(--cyan)">azul</b>. Toca otra vez para quitarla. Eso es todo.</p>
+        <p class="note" style="margin:0 0 14px">👉 Toca las horas en que <b>sí</b> puedes atender ese día. Se ponen en <b style="color:var(--cyan)">azul</b> y se guardan solas. Toca otra vez para quitarla.</p>
         <div class="hourgrid" id="hourGrid"></div>
         <div class="customtime">
           <label>¿Necesitas una hora que no está arriba? (ej. 1:30 p.m.)</label>
@@ -199,17 +202,20 @@
     </div>
 
     <div class="card">
-      <h2>3 · Genera y comparte el enlace</h2>
-      <p class="muted" id="adminSummaryLine">Aún no has añadido horarios.</p>
-      <button class="btn primary block" id="genLink" style="margin-top:8px">🔗 Generar enlace para el cliente</button>
-      <div class="linkbox hidden" id="linkResult">
+      <h2>3 · Enlace para el cliente</h2>
+      <p class="muted">Comparte este enlace con Diego y Ana María. Siempre muestra tu disponibilidad actual (se actualiza solo).</p>
+      <div class="linkbox">
         <input id="clientLink" readonly>
         <button class="btn ghost" id="copyLink">Copiar</button>
       </div>
-      <div class="linkbox hidden" id="waShareBox">
-        <button class="btn wa block" id="waShareDiego">Enviar el enlace por WhatsApp</button>
+      <div class="linkbox">
+        <button class="btn wa block" id="waShare">Enviar el enlace por WhatsApp</button>
       </div>
-      <p class="note hidden" id="linkHelp">Este enlace ya incluye toda tu disponibilidad (de cualquier mes). Cuando cambies algo, vuelve a generar el enlace y reenvíalo.</p>
+    </div>
+
+    <div class="card">
+      <h2>4 · Citas agendadas</h2>
+      <div id="citasList" class="muted">Cargando…</div>
     </div>
   </section>
 
@@ -268,12 +274,12 @@
         <button class="btn gc block" id="gcalBtn">📅 Agregar a Google Calendar</button>
         <button class="btn wa block" id="waBtn">✅ Confirmar por WhatsApp</button>
       </div>
-      <p class="note">Haz ambos pasos: agrega el evento a tu calendario y envía el WhatsApp para que Jorge confirme.</p>
+      <p class="note" id="confirmNote">Haz ambos pasos: agrega el evento a tu calendario y envía el WhatsApp para que Jorge confirme.</p>
     </div>
 
     <div class="card hidden" id="noConfig">
-      <h2>Enlace sin configurar</h2>
-      <p class="muted">Este enlace todavía no tiene disponibilidad cargada. Pídele a Jorge que genere el enlace desde el panel de Admin.</p>
+      <h2>Sin disponibilidad todavía</h2>
+      <p class="muted">Jorge aún no ha publicado horarios. Vuelve a intentarlo en un rato o escríbele directamente.</p>
     </div>
   </section>
 
@@ -285,6 +291,10 @@
 <script>
 (function(){
   "use strict";
+  var SUPA_URL="https://nvgkhdrrxqdgxktfkioa.supabase.co";
+  var SUPA_KEY="sb_publishable_d1RrtE7S-9a8e8mGKRRjxQ_4HU_nkDl";
+  var sb=(window.supabase&&window.supabase.createClient)?window.supabase.createClient(SUPA_URL,SUPA_KEY):null;
+
   var DOW=["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
   var MESES=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
   var MESES_CAP=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
@@ -292,19 +302,58 @@
   var state={ wa:"", mail:"", dur:60, slots:{} };
   var curY, curM;
   var adminSelDay=null;
-  var client={ who:null, sess:null, y:null, m:null, day:null, time:null };
+  var client={ who:null, sess:null, y:null, m:null, day:null, time:null, saved:false };
   var holCache={};
 
   function pad(n){return (n<10?"0":"")+n;}
   function keyOf(y,m,d){return y+"-"+pad(m+1)+"-"+pad(d);}
   function todayMidnight(){var t=new Date();t.setHours(0,0,0,0);return t;}
-  function b64enc(obj){return btoa(unescape(encodeURIComponent(JSON.stringify(obj))));}
-  function b64dec(s){try{return JSON.parse(decodeURIComponent(escape(atob(s))));}catch(e){return null;}}
   function toast(m){var t=document.getElementById("toast");t.textContent=m||"Listo";t.classList.add("show");setTimeout(function(){t.classList.remove("show");},1600);}
   function fmtLong(y,m,d){var date=new Date(y,m,d);return DOW[date.getDay()]+" "+d+" de "+MESES[m]+" de "+y;}
   function fmt12(t){var p=t.split(":"),h=parseInt(p[0],10),m=p[1];var ap=h<12?"a.m.":"p.m.";var h12=h%12;if(h12===0)h12=12;return h12+":"+m+" "+ap;}
   function addMin(t,min){var p=t.split(":"),d=new Date(2000,0,1,parseInt(p[0],10),parseInt(p[1],10));d.setMinutes(d.getMinutes()+min);return pad(d.getHours())+":"+pad(d.getMinutes());}
 
+  /* ---- Supabase ---- */
+  function loadDisponibilidad(){
+    if(!sb) return Promise.resolve();
+    return sb.from('agenda_disponibilidad').select('*').eq('id','default').maybeSingle().then(function(res){
+      var d=res.data;
+      if(d){ state.slots=d.slots||{}; state.wa=d.wa||""; state.mail=d.mail||""; state.dur=d.dur||60; }
+    }).catch(function(){});
+  }
+  var saveTimer=null;
+  function saveDisponibilidad(){
+    if(!sb) return;
+    if(saveTimer) clearTimeout(saveTimer);
+    saveTimer=setTimeout(function(){
+      sb.from('agenda_disponibilidad').upsert({id:'default',slots:state.slots,wa:state.wa,mail:state.mail,dur:state.dur,updated_at:new Date().toISOString()}).then(function(res){
+        if(!res.error) toast("Guardado ✓"); else toast("No se pudo guardar");
+      });
+    },350);
+  }
+  function loadCitas(){
+    if(!sb) return;
+    sb.from('agenda_citas').select('*').order('fecha',{ascending:true}).then(function(res){
+      var el=document.getElementById("citasList");
+      if(res.error){el.textContent="No se pudieron cargar las citas.";return;}
+      var data=res.data||[];
+      if(!data.length){el.textContent="Aún no hay citas agendadas.";return;}
+      el.innerHTML=data.map(function(c){
+        var p=(c.fecha||"").split("-");
+        var f=p.length===3?fmtLong(+p[0],+p[1]-1,+p[2]):c.fecha;
+        return '<div class="citarow"><span><b>'+c.quien+'</b> · '+c.sesion+'</span><span>'+f+' · '+fmt12(c.hora)+'</span></div>';
+      }).join("");
+    });
+  }
+  function saveCita(){
+    if(!sb||client.saved) return;
+    client.saved=true;
+    sb.from('agenda_citas').insert({quien:client.who,sesion:client.sess,fecha:keyOf(client.y,client.m,client.day),hora:client.time,dur:state.dur}).then(function(res){
+      if(res.error){client.saved=false;}
+    });
+  }
+
+  /* ---- festivos Colombia ---- */
   function easter(y){var a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),mo=Math.floor((h+l-7*m+114)/31),da=((h+l-7*m+114)%31)+1;return new Date(y,mo-1,da);}
   function holidays(y){
     if(holCache[y])return holCache[y];
@@ -313,24 +362,12 @@
     function emil(dt){var d=new Date(dt);while(d.getDay()!==1)d.setDate(d.getDate()+1);return d;}
     var E=easter(y);
     function off(n){var d=new Date(E);d.setDate(d.getDate()+n);return d;}
-    put(new Date(y,0,1),"Año Nuevo");
-    put(new Date(y,4,1),"Día del Trabajo");
-    put(new Date(y,6,20),"Día de la Independencia");
-    put(new Date(y,7,7),"Batalla de Boyacá");
-    put(new Date(y,11,8),"Inmaculada Concepción");
-    put(new Date(y,11,25),"Navidad");
-    put(emil(new Date(y,0,6)),"Reyes Magos");
-    put(emil(new Date(y,2,19)),"San José");
-    put(emil(new Date(y,5,29)),"San Pedro y San Pablo");
-    put(emil(new Date(y,7,15)),"Asunción de la Virgen");
-    put(emil(new Date(y,9,12)),"Día de la Raza");
-    put(emil(new Date(y,10,1)),"Todos los Santos");
-    put(emil(new Date(y,10,11)),"Independencia de Cartagena");
-    put(off(-3),"Jueves Santo");
-    put(off(-2),"Viernes Santo");
-    put(emil(off(39)),"Ascensión del Señor");
-    put(emil(off(60)),"Corpus Christi");
-    put(emil(off(68)),"Sagrado Corazón");
+    put(new Date(y,0,1),"Año Nuevo");put(new Date(y,4,1),"Día del Trabajo");put(new Date(y,6,20),"Día de la Independencia");
+    put(new Date(y,7,7),"Batalla de Boyacá");put(new Date(y,11,8),"Inmaculada Concepción");put(new Date(y,11,25),"Navidad");
+    put(emil(new Date(y,0,6)),"Reyes Magos");put(emil(new Date(y,2,19)),"San José");put(emil(new Date(y,5,29)),"San Pedro y San Pablo");
+    put(emil(new Date(y,7,15)),"Asunción de la Virgen");put(emil(new Date(y,9,12)),"Día de la Raza");put(emil(new Date(y,10,1)),"Todos los Santos");
+    put(emil(new Date(y,10,11)),"Independencia de Cartagena");put(off(-3),"Jueves Santo");put(off(-2),"Viernes Santo");
+    put(emil(off(39)),"Ascensión del Señor");put(emil(off(60)),"Corpus Christi");put(emil(off(68)),"Sagrado Corazón");
     holCache[y]=H;return H;
   }
 
@@ -431,7 +468,7 @@
     var i=state.slots[k].indexOf(t);
     if(i>-1){state.slots[k].splice(i,1);if(!state.slots[k].length)delete state.slots[k];}
     else state.slots[k].push(t);
-    renderHourGrid(); buildCal("adminCal","admin"); reSelectAdmin(); updateAdminSummary();
+    renderHourGrid(); buildCal("adminCal","admin"); reSelectAdmin(); saveDisponibilidad();
   }
   function addTime(t){
     if(adminSelDay==null){toast("Elige un día primero");return;}
@@ -439,40 +476,17 @@
     var k=keyOf(curY,curM,adminSelDay);
     if(!state.slots[k])state.slots[k]=[];
     if(state.slots[k].indexOf(t)===-1)state.slots[k].push(t);
-    renderHourGrid(); buildCal("adminCal","admin"); reSelectAdmin(); updateAdminSummary(); toast("Hora añadida");
+    renderHourGrid(); buildCal("adminCal","admin"); reSelectAdmin(); saveDisponibilidad();
   }
   function reSelectAdmin(){var cell=document.querySelector('#adminCal .day[data-day="'+adminSelDay+'"]');if(cell)cell.classList.add("sel");}
-  function updateAdminSummary(){
-    var days=Object.keys(state.slots).length,total=0;
-    Object.keys(state.slots).forEach(function(k){total+=state.slots[k].length;});
-    var el=document.getElementById("adminSummaryLine");
-    if(!total){el.textContent="Aún no has añadido horarios.";}
-    else{el.innerHTML="Tienes <b style='color:var(--cyan)'>"+total+"</b> horario(s) disponibles en <b style='color:var(--cyan)'>"+days+"</b> día(s).";}
-  }
   function readContacts(){
     state.wa=document.getElementById("waNumber").value.replace(/[^0-9]/g,"");
     state.mail=document.getElementById("gEmail").value.trim();
     state.dur=parseInt(document.getElementById("dur").value,10)||60;
   }
-  function genLink(){
-    readContacts();
-    var total=0;Object.keys(state.slots).forEach(function(k){total+=state.slots[k].length;});
-    if(!total){toast("Añade al menos un horario");return;}
-    if(!state.wa){toast("Escribe tu WhatsApp");return;}
-    var payload={wa:state.wa,mail:state.mail,dur:state.dur,slots:state.slots};
-    var base=location.href.split("#")[0];
-    var link=base+"#c="+b64enc(payload);
-    document.getElementById("clientLink").value=link;
-    document.getElementById("linkResult").classList.remove("hidden");
-    document.getElementById("waShareBox").classList.remove("hidden");
-    document.getElementById("linkHelp").classList.remove("hidden");
-    var msg="Hola, este es el enlace para que agendes tus sesiones de acompañamiento estratégico (2, 3 y 4). Elige el horario que prefieras: "+link;
-    document.getElementById("waShareDiego").onclick=function(){window.open("https://wa.me/?text="+encodeURIComponent(msg),"_blank");};
-    toast("Enlace generado");
-  }
 
   function selectClientDay(d){
-    client.y=curY;client.m=curM;client.day=d;client.time=null;
+    client.y=curY;client.m=curM;client.day=d;client.time=null;client.saved=false;
     document.querySelectorAll("#clientCal .day").forEach(function(c){c.classList.remove("sel");});
     var cell=document.querySelector('#clientCal .day[data-day="'+d+'"]'); if(cell)cell.classList.add("sel");
     document.getElementById("clientSlotsWrap").classList.remove("hidden");
@@ -484,7 +498,7 @@
     (state.slots[keyOf(curY,curM,d)]||[]).slice().sort().forEach(function(t){
       var s=document.createElement("div");s.className="slot";s.textContent=fmt12(t);
       s.addEventListener("click",function(){
-        client.time=t;
+        client.time=t;client.saved=false;
         document.querySelectorAll("#clientSlots .slot").forEach(function(x){x.classList.remove("sel");});
         s.classList.add("sel");renderConfirm();
       });
@@ -539,7 +553,9 @@
     document.getElementById("btnClient").classList.toggle("active",!admin);
     if(admin){
       var now=new Date();curY=now.getFullYear();curM=now.getMonth();
-      fillSelectors("admSelM","admSelY","admin");buildCal("adminCal","admin");updateAdminSummary();
+      fillSelectors("admSelM","admSelY","admin");buildCal("adminCal","admin");
+      document.getElementById("clientLink").value=location.origin+location.pathname;
+      loadCitas();
     }else{ initClient(); }
   }
   function initClient(){
@@ -553,37 +569,42 @@
       fillSelectors("cliSelM","cliSelY","client");buildCal("clientCal","client");
     }
   }
-  function loadFromHash(){
-    var m=(location.hash||"").match(/c=([^&]+)/);
-    if(m){var obj=b64dec(m[1]);if(obj){state.wa=obj.wa||"";state.mail=obj.mail||"";state.dur=obj.dur||60;state.slots=obj.slots||{};return true;}}
-    return false;
-  }
 
+  /* eventos */
   document.getElementById("addSlot").addEventListener("click",function(){addTime(document.getElementById("timeInput").value);});
   document.getElementById("timeInput").addEventListener("keydown",function(e){if(e.key==="Enter")addTime(this.value);});
-  document.getElementById("genLink").addEventListener("click",genLink);
+  ["waNumber","gEmail","dur"].forEach(function(id){
+    document.getElementById(id).addEventListener("change",function(){readContacts();saveDisponibilidad();});
+  });
   document.getElementById("copyLink").addEventListener("click",function(){
     var i=document.getElementById("clientLink");i.select();
-    navigator.clipboard.writeText(i.value).then(function(){toast("Enlace copiado");},function(){document.execCommand("copy");toast("Enlace copiado");});
+    navigator.clipboard.writeText(i.value).then(function(){toast("Enlace copiado");},function(){try{document.execCommand("copy");}catch(e){}toast("Enlace copiado");});
+  });
+  document.getElementById("waShare").addEventListener("click",function(){
+    var link=location.origin+location.pathname;
+    var msg="Hola, este es el enlace para que agendes tus sesiones de acompañamiento estratégico (2, 3 y 4). Elige el horario que prefieras: "+link;
+    window.open("https://wa.me/?text="+encodeURIComponent(msg),"_blank");
   });
   document.querySelectorAll(".navbtn").forEach(function(b){b.addEventListener("click",function(){navMonth(b.dataset.nav,parseInt(b.dataset.dir,10));});});
-  document.getElementById("whoPick").addEventListener("click",function(e){var o=e.target.closest(".opt");if(!o)return;document.querySelectorAll("#whoPick .opt").forEach(function(x){x.classList.remove("sel");});o.classList.add("sel");client.who=o.dataset.who;renderConfirm();});
-  document.getElementById("sessPick").addEventListener("click",function(e){var o=e.target.closest(".opt");if(!o)return;document.querySelectorAll("#sessPick .opt").forEach(function(x){x.classList.remove("sel");});o.classList.add("sel");client.sess=o.dataset.sess;renderConfirm();});
-  document.getElementById("gcalBtn").addEventListener("click",function(){window.open(gcalUrl(),"_blank");});
-  document.getElementById("waBtn").addEventListener("click",function(){window.open(waUrl(),"_blank");});
+  document.getElementById("whoPick").addEventListener("click",function(e){var o=e.target.closest(".opt");if(!o)return;document.querySelectorAll("#whoPick .opt").forEach(function(x){x.classList.remove("sel");});o.classList.add("sel");client.who=o.dataset.who;client.saved=false;renderConfirm();});
+  document.getElementById("sessPick").addEventListener("click",function(e){var o=e.target.closest(".opt");if(!o)return;document.querySelectorAll("#sessPick .opt").forEach(function(x){x.classList.remove("sel");});o.classList.add("sel");client.sess=o.dataset.sess;client.saved=false;renderConfirm();});
+  document.getElementById("gcalBtn").addEventListener("click",function(){window.open(gcalUrl(),"_blank");saveCita();document.getElementById("confirmNote").textContent="¡Listo! Tu cita quedó registrada y avisada a Jorge.";});
+  document.getElementById("waBtn").addEventListener("click",function(){window.open(waUrl(),"_blank");saveCita();document.getElementById("confirmNote").textContent="¡Listo! Tu cita quedó registrada y avisada a Jorge.";});
   document.getElementById("btnAdmin").addEventListener("click",function(){showMode("admin");});
   document.getElementById("btnClient").addEventListener("click",function(){showMode("client");});
 
-  var hasConfig=loadFromHash();
-  if(hasConfig){
-    if(state.wa)document.getElementById("waNumber").value=state.wa;
-    if(state.mail)document.getElementById("gEmail").value=state.mail;
-    document.getElementById("dur").value=state.dur;
-    showMode("client");
-  }else{
-    document.getElementById("gEmail").value="jorgeicone.com@gmail.com";
-    showMode("admin");
+  /* arranque */
+  function boot(){
+    loadDisponibilidad().then(function(){
+      var isAdmin=/[?&]admin=1/.test(location.search);
+      if(isAdmin){ document.getElementById("modeSwitch").classList.remove("hidden"); }
+      document.getElementById("waNumber").value=state.wa||"";
+      document.getElementById("gEmail").value=state.mail||"jorgeicone.com@gmail.com";
+      document.getElementById("dur").value=state.dur||60;
+      showMode(isAdmin?"admin":"client");
+    });
   }
+  boot();
 })();
 
 (function(){
