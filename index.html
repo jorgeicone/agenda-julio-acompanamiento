@@ -122,7 +122,7 @@
   .summary{border:1px dashed var(--cyan);border-radius:12px;padding:16px;background:rgba(0,212,255,.06)}
   .summary .row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.06)}
   .summary .row:last-child{border:none}
-  .citarow{display:flex;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;background:#08132a;font-size:14px}
+  .citarow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;background:#08132a;font-size:14px}
   .citarow b{color:var(--cyan)}
   .hidden{display:none!important}
   .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--ok);color:#04140a;padding:12px 20px;border-radius:12px;font-weight:700;box-shadow:var(--sh);opacity:0;transition:.3s;pointer-events:none;z-index:9}
@@ -307,7 +307,7 @@
   var state={ wa:"", mail:"", dur:60, slots:{} };
   var curY, curM;
   var adminSelDay=null;
-  var client={ who:null, sess:null, y:null, m:null, day:null, time:null, saved:false };
+  var client={ who:null, sess:null, y:null, m:null, day:null, time:null };
   var cart=[];
   var holCache={};
 
@@ -339,24 +339,36 @@
   }
   function loadCitas(){
     if(!sb) return;
+    var el=document.getElementById("citasList");
     sb.from('agenda_citas').select('*').order('fecha',{ascending:true}).then(function(res){
-      var el=document.getElementById("citasList");
       if(res.error){el.textContent="No se pudieron cargar las citas.";return;}
       var data=res.data||[];
       if(!data.length){el.textContent="Aún no hay citas agendadas.";return;}
-      el.innerHTML=data.map(function(c){
+      el.innerHTML="";
+      data.forEach(function(c){
         var p=(c.fecha||"").split("-");
         var f=p.length===3?fmtLong(+p[0],+p[1]-1,+p[2]):c.fecha;
-        return '<div class="citarow"><span><b>'+c.quien+'</b> · '+c.sesion+'</span><span>'+f+' · '+fmt12(c.hora)+'</span></div>';
-      }).join("");
+        var div=document.createElement("div");div.className="citarow";
+        var left=document.createElement("span");left.innerHTML="<b>"+c.quien+"</b> · "+c.sesion+" · "+f+" · "+fmt12(c.hora);
+        var del=document.createElement("button");del.className="btn ghost";del.style.padding="7px 11px";del.style.fontSize="13px";del.style.color="var(--bad)";del.textContent="🗑 Borrar";del.title="Borrar cita";
+        del.addEventListener("click",function(){deleteCita(c.id,c.quien,c.sesion);});
+        div.appendChild(left);div.appendChild(del);
+        el.appendChild(div);
+      });
     });
   }
-  function saveCita(){
-    if(!sb||client.saved) return;
-    client.saved=true;
-    sb.from('agenda_citas').insert({quien:client.who,sesion:client.sess,fecha:keyOf(client.y,client.m,client.day),hora:client.time,dur:state.dur}).then(function(res){
-      if(res.error){client.saved=false;}
+  function deleteCita(id,quien,sesion){
+    if(!sb) return;
+    if(!window.confirm("¿Borrar esta cita?\n"+quien+" · "+sesion)) return;
+    sb.from('agenda_citas').delete().eq('id',id).then(function(res){
+      if(res.error){toast("No se pudo borrar");}
+      else{toast("Cita borrada");loadCitas();}
     });
+  }
+  function saveCart(){
+    if(!sb||!cart.length) return;
+    var rows=cart.map(function(it){return {quien:it.who,sesion:it.sesion,fecha:keyOf(it.y,it.m,it.day),hora:it.time,dur:state.dur};});
+    return sb.from('agenda_citas').insert(rows);
   }
 
   /* ---- festivos Colombia ---- */
@@ -492,7 +504,7 @@
   }
 
   function selectClientDay(d){
-    client.y=curY;client.m=curM;client.day=d;client.time=null;client.saved=false;
+    client.y=curY;client.m=curM;client.day=d;client.time=null;
     document.querySelectorAll("#clientCal .day").forEach(function(c){c.classList.remove("sel");});
     var cell=document.querySelector('#clientCal .day[data-day="'+d+'"]'); if(cell)cell.classList.add("sel");
     document.getElementById("clientSlotsWrap").classList.remove("hidden");
@@ -504,7 +516,7 @@
     (state.slots[keyOf(curY,curM,d)]||[]).slice().sort().forEach(function(t){
       var s=document.createElement("div");s.className="slot";s.textContent=fmt12(t);
       s.addEventListener("click",function(){
-        client.time=t;client.saved=false;
+        client.time=t;
         document.querySelectorAll("#clientSlots .slot").forEach(function(x){x.classList.remove("sel");});
         s.classList.add("sel");renderConfirm();
       });
@@ -524,27 +536,6 @@
     card.scrollIntoView({behavior:"smooth",block:"nearest"});
   }
   function row(a,b){return '<div class="row"><span class="muted">'+a+'</span><b>'+b+'</b></div>';}
-  function gcalUrl(){
-    var start=client.y+pad(client.m+1)+pad(client.day)+"T"+client.time.replace(":","")+"00";
-    var endT=addMin(client.time,state.dur);
-    var end=client.y+pad(client.m+1)+pad(client.day)+"T"+endT.replace(":","")+"00";
-    var title="Acompañamiento Estratégico · "+client.sess+" · "+client.who;
-    var details="Sesión de acompañamiento estratégico con Jorge Hugo Pérez (ICONE ialabs).\nParticipante: "+client.who+"\n"+client.sess;
-    var u="https://calendar.google.com/calendar/render?action=TEMPLATE"+
-      "&text="+encodeURIComponent(title)+"&dates="+start+"/"+end+"&ctz=America/Bogota"+
-      "&details="+encodeURIComponent(details)+"&location="+encodeURIComponent("Sesión virtual");
-    if(state.mail)u+="&add="+encodeURIComponent(state.mail);
-    return u;
-  }
-  function waUrl(){
-    var msg="Hola Jorge 👋 Quiero confirmar mi cita de acompañamiento estratégico:\n"+
-      "• Quién: "+client.who+"\n• "+client.sess+"\n"+
-      "• Fecha: "+fmtLong(client.y,client.m,client.day)+"\n"+
-      "• Hora: "+fmt12(client.time)+" ("+state.dur+" min)\n"+
-      "Ya lo agregué a mi calendario. ¿Me confirmas?";
-    var base=state.wa?("https://wa.me/"+state.wa):"https://wa.me/";
-    return base+"?text="+encodeURIComponent(msg);
-  }
 
   /* ---- carrito de sesiones (permite agendar las 3) ---- */
   function gcalUrlForItem(it){
@@ -606,10 +597,7 @@
   }
   function confirmAll(){
     if(!cart.length){toast("Añade al menos una sesión");return;}
-    if(sb){
-      var rows=cart.map(function(it){return {quien:it.who,sesion:it.sesion,fecha:keyOf(it.y,it.m,it.day),hora:it.time,dur:state.dur};});
-      sb.from("agenda_citas").insert(rows).then(function(){});
-    }
+    saveCart();
     window.open(waAllUrl(),"_blank");
     document.getElementById("cartNote").textContent="¡Listo! Tus sesiones quedaron registradas y avisadas a Jorge. No olvides agregarlas a tu calendario con 📅.";
   }
@@ -660,8 +648,8 @@
     window.open("https://wa.me/?text="+encodeURIComponent(msg),"_blank");
   });
   document.querySelectorAll(".navbtn").forEach(function(b){b.addEventListener("click",function(){navMonth(b.dataset.nav,parseInt(b.dataset.dir,10));});});
-  document.getElementById("whoPick").addEventListener("click",function(e){var o=e.target.closest(".opt");if(!o)return;document.querySelectorAll("#whoPick .opt").forEach(function(x){x.classList.remove("sel");});o.classList.add("sel");client.who=o.dataset.who;client.saved=false;renderConfirm();});
-  document.getElementById("sessPick").addEventListener("click",function(e){var o=e.target.closest(".opt");if(!o)return;if(o.dataset.used==="1"){toast("Esa sesión ya está en tu lista");return;}document.querySelectorAll("#sessPick .opt").forEach(function(x){x.classList.remove("sel");});o.classList.add("sel");client.sess=o.dataset.sess;client.saved=false;renderConfirm();});
+  document.getElementById("whoPick").addEventListener("click",function(e){var o=e.target.closest(".opt");if(!o)return;document.querySelectorAll("#whoPick .opt").forEach(function(x){x.classList.remove("sel");});o.classList.add("sel");client.who=o.dataset.who;renderConfirm();});
+  document.getElementById("sessPick").addEventListener("click",function(e){var o=e.target.closest(".opt");if(!o)return;if(o.dataset.used==="1"){toast("Esa sesión ya está en tu lista");return;}document.querySelectorAll("#sessPick .opt").forEach(function(x){x.classList.remove("sel");});o.classList.add("sel");client.sess=o.dataset.sess;renderConfirm();});
   document.getElementById("addCartBtn").addEventListener("click",addToCart);
   document.getElementById("confirmAllBtn").addEventListener("click",confirmAll);
   document.getElementById("btnAdmin").addEventListener("click",function(){showMode("admin");});
