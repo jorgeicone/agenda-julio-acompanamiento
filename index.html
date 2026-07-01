@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agenda tu sesión · ICONE ialabs</title>
+<style>
+  :root{
+    --bg:#050d1f; --bg2:#0a1730; --card:#0e1d3a; --line:#1c2f52;
+    --cyan:#00d4ff; --purple:#7b2fff; --orange:#ff8c00;
+    --txt:#eaf2ff; --mut:#8ba0c4; --ok:#25d07a; --bad:#ff5470;
+    --rad:16px; --sh:0 10px 40px rgba(0,0,0,.45);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+    background:radial-gradient(1200px 700px at 15% -10%,rgba(123,47,255,.18),transparent 60%),
+               radial-gradient(1000px 600px at 110% 10%,rgba(0,212,255,.14),transparent 55%),
+               var(--bg);
+    color:var(--txt); min-height:100vh; line-height:1.5;
+  }
+  .wrap{max-width:940px;margin:0 auto;padding:26px 18px 70px}
+  header.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:22px;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--cyan),var(--purple));display:grid;place-items:center;font-weight:800;color:#04101f;box-shadow:0 0 24px rgba(0,212,255,.4)}
+  .brand small{color:var(--mut);display:block;font-size:12px;letter-spacing:.14em;text-transform:uppercase}
+  .brand b{font-size:17px}
+  .modewrap{display:flex;gap:8px;align-items:center}
+  .toggle{background:var(--card);border:1px solid var(--line);color:var(--txt);padding:8px 14px;border-radius:999px;cursor:pointer;font-size:13px;font-weight:600;transition:.2s}
+  .toggle:hover{border-color:var(--cyan)}
+  .toggle.active{background:linear-gradient(135deg,var(--cyan),var(--purple));color:#04101f;border-color:transparent}
+  h1{font-size:26px;margin:6px 0 4px;font-weight:800}
+  h1 span{background:linear-gradient(90deg,var(--cyan),var(--purple),var(--orange));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{color:var(--mut);margin:0 0 20px;font-size:15px}
+  .card{background:linear-gradient(180deg,var(--card),var(--bg2));border:1px solid var(--line);border-radius:var(--rad);padding:20px;box-shadow:var(--sh);margin-bottom:18px}
+  .card h2{font-size:15px;margin:0 0 14px;letter-spacing:.03em;color:var(--cyan);text-transform:uppercase;font-weight:700}
+  label{display:block;font-size:13px;color:var(--mut);margin:0 0 5px;font-weight:600}
+  input,select{width:100%;background:#08132a;border:1px solid var(--line);border-radius:10px;color:var(--txt);padding:11px 12px;font-size:14px;font-family:inherit}
+  input:focus,select:focus{outline:none;border-color:var(--cyan);box-shadow:0 0 0 3px rgba(0,212,255,.15)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+  @media(max-width:640px){.grid2,.grid3{grid-template-columns:1fr}}
+  .btn{border:none;border-radius:11px;padding:13px 18px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+  .btn.primary{background:linear-gradient(135deg,var(--cyan),var(--purple));color:#04101f}
+  .btn.primary:hover{transform:translateY(-1px);box-shadow:0 8px 26px rgba(0,212,255,.35)}
+  .btn.ghost{background:#08132a;border:1px solid var(--line);color:var(--txt)}
+  .btn.ghost:hover{border-color:var(--cyan)}
+  .btn.wa{background:#25D366;color:#04140a}
+  .btn.gc{background:#fff;color:#1a1a1a}
+  .btn.block{width:100%}
+  .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:7px}
+  .dow{text-align:center;font-size:11px;color:var(--mut);font-weight:700;padding:4px 0;text-transform:uppercase;letter-spacing:.05em}
+  .day{aspect-ratio:1/1;border:1px solid var(--line);border-radius:11px;background:#08132a;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative;transition:.15s;font-weight:600;font-size:15px}
+  .day.empty{background:transparent;border:none;cursor:default}
+  .day.past{opacity:.28;cursor:not-allowed}
+  .day:not(.empty):not(.past):hover{border-color:var(--cyan)}
+  .day.has{border-color:var(--purple);background:linear-gradient(180deg,rgba(123,47,255,.22),#08132a)}
+  .day.sel{background:linear-gradient(135deg,var(--cyan),var(--purple));color:#04101f;border-color:transparent}
+  .day .dot{width:6px;height:6px;border-radius:50%;background:var(--cyan);margin-top:4px}
+  .day.sel .dot{background:#04101f}
+  .day .cnt{position:absolute;top:5px;right:7px;font-size:10px;color:var(--cyan)}
+  .day.sel .cnt{color:#04101f}
+  .slots{display:flex;flex-wrap:wrap;gap:9px;margin-top:6px}
+  .slot{background:#08132a;border:1px solid var(--line);border-radius:10px;padding:9px 14px;cursor:pointer;font-weight:600;font-size:14px;transition:.15s}
+  .slot:hover{border-color:var(--cyan)}
+  .slot.sel{background:linear-gradient(135deg,var(--cyan),var(--purple));color:#04101f;border-color:transparent}
+  .chip{display:inline-flex;align-items:center;gap:6px;background:#08132a;border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:13px;margin:4px 6px 0 0}
+  .chip button{background:none;border:none;color:var(--bad);cursor:pointer;font-size:15px;line-height:1;padding:0}
+  .muted{color:var(--mut);font-size:13px}
+  .rowend{display:flex;gap:10px;align-items:flex-end}
+  .rowend > div{flex:1}
+  .rowend .btn{white-space:nowrap}
+  .linkbox{display:flex;gap:8px;margin-top:12px}
+  .linkbox input{font-size:13px}
+  .pill{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700;background:rgba(0,212,255,.14);color:var(--cyan);border:1px solid rgba(0,212,255,.3)}
+  .steps{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+  .step{flex:1;min-width:150px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+  .step b{color:var(--cyan)}
+  .who{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .who .opt{border:1px solid var(--line);border-radius:12px;padding:16px;text-align:center;cursor:pointer;background:#08132a;font-weight:700;transition:.15s}
+  .who .opt:hover{border-color:var(--cyan)}
+  .who .opt.sel{background:linear-gradient(135deg,var(--cyan),var(--purple));color:#04101f;border-color:transparent}
+  .who .opt small{display:block;font-weight:500;font-size:12px;opacity:.75;margin-top:3px}
+  .sess{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+  .sess .opt{border:1px solid var(--line);border-radius:12px;padding:14px 8px;text-align:center;cursor:pointer;background:#08132a;font-weight:700;transition:.15s}
+  .sess .opt:hover{border-color:var(--cyan)}
+  .sess .opt.sel{background:linear-gradient(135deg,var(--purple),var(--orange));color:#fff;border-color:transparent}
+  .summary{border:1px dashed var(--cyan);border-radius:12px;padding:16px;background:rgba(0,212,255,.06)}
+  .summary .row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+  .summary .row:last-child{border:none}
+  .hidden{display:none!important}
+  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--ok);color:#04140a;padding:12px 20px;border-radius:12px;font-weight:700;box-shadow:var(--sh);opacity:0;transition:.3s;pointer-events:none}
+  .toast.show{opacity:1}
+  footer{text-align:center;color:var(--mut);font-size:12px;margin-top:30px}
+  .note{font-size:12px;color:var(--mut);margin-top:8px}
+  .divider{height:1px;background:var(--line);margin:16px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <div class="logo">IC</div>
+      <div><small>ICONE ialabs</small><b>Acompañamiento Estratégico</b></div>
+    </div>
+    <div class="modewrap" id="modeSwitch">
+      <button class="toggle" data-mode="client" id="btnClient">Vista cliente</button>
+      <button class="toggle active" data-mode="admin" id="btnAdmin">Admin</button>
+    </div>
+  </header>
+
+  <!-- ================= ADMIN ================= -->
+  <section id="adminView">
+    <h1>Configura tu <span>disponibilidad</span> de julio</h1>
+    <p class="sub">Marca los días y las horas en que puedes atender. Luego genera el enlace y envíaselo a Diego y a Ana María.</p>
+
+    <div class="card">
+      <h2>1 · Tus datos de contacto</h2>
+      <div class="grid3">
+        <div>
+          <label>Tu WhatsApp (con indicativo, solo números)</label>
+          <input id="waNumber" placeholder="573001234567" inputmode="numeric">
+        </div>
+        <div>
+          <label>Tu correo de Google (para el evento)</label>
+          <input id="gEmail" placeholder="jorgeicone.com@gmail.com">
+        </div>
+        <div>
+          <label>Duración de cada sesión (min)</label>
+          <input id="dur" type="number" value="60" min="15" step="15">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>2 · Elige un día de julio y añade horarios</h2>
+      <div class="cal" id="adminCal"></div>
+      <div id="adminDayPanel" class="hidden">
+        <div class="divider"></div>
+        <p style="margin:0 0 10px"><span class="pill" id="adminDayLabel"></span></p>
+        <div class="rowend">
+          <div>
+            <label>Hora de inicio</label>
+            <input id="timeInput" type="time" value="09:00">
+          </div>
+          <button class="btn primary" id="addSlot">+ Añadir</button>
+        </div>
+        <div id="adminSlots" style="margin-top:12px"></div>
+        <p class="note">Tip: puedes añadir varios horarios al mismo día (ej. 09:00, 11:00, 15:00).</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>3 · Genera y comparte el enlace</h2>
+      <p class="muted" id="adminSummaryLine">Aún no has añadido horarios.</p>
+      <button class="btn primary block" id="genLink" style="margin-top:8px">🔗 Generar enlace para el cliente</button>
+      <div class="linkbox hidden" id="linkResult">
+        <input id="clientLink" readonly>
+        <button class="btn ghost" id="copyLink">Copiar</button>
+      </div>
+      <div class="linkbox hidden" id="waShareBox">
+        <button class="btn wa block" id="waShareDiego">Enviar a Diego por WhatsApp</button>
+      </div>
+      <p class="note hidden" id="linkHelp">Este enlace ya incluye tu disponibilidad. Cuando lo abran, verán solo tus horarios libres. Si cambias algo, vuelve a generar el enlace.</p>
+    </div>
+  </section>
+
+  <!-- ================= CLIENTE ================= -->
+  <section id="clientView" class="hidden">
+    <h1>Agenda tus <span>sesiones</span> de acompañamiento</h1>
+    <p class="sub">Elige quién eres, la sesión y el horario que más te convenga. Al confirmar se agenda en calendario y se avisa a Jorge.</p>
+
+    <div class="steps">
+      <div class="step"><b>1.</b> ¿Quién eres?</div>
+      <div class="step"><b>2.</b> Elige la sesión</div>
+      <div class="step"><b>3.</b> Día y hora</div>
+      <div class="step"><b>4.</b> Confirma</div>
+    </div>
+
+    <div class="card">
+      <h2>¿Quién agenda?</h2>
+      <div class="who" id="whoPick">
+        <div class="opt" data-who="Diego Artunduaga">Diego Artunduaga<small>Acompañamiento estratégico</small></div>
+        <div class="opt" data-who="Ana María Hincapié">Ana María Hincapié<small>Acompañamiento estratégico</small></div>
+      </div>
+    </div>
+
+    <div class="card" id="sessCard">
+      <h2>¿Qué sesión quieres agendar?</h2>
+      <div class="sess" id="sessPick">
+        <div class="opt" data-sess="Sesión 2">Sesión 2</div>
+        <div class="opt" data-sess="Sesión 3">Sesión 3</div>
+        <div class="opt" data-sess="Sesión 4">Sesión 4</div>
+      </div>
+    </div>
+
+    <div class="card" id="calCard">
+      <h2>Elige el día</h2>
+      <div class="cal" id="clientCal"></div>
+      <div id="clientSlotsWrap" class="hidden">
+        <div class="divider"></div>
+        <p style="margin:0 0 8px"><span class="pill" id="clientDayLabel"></span></p>
+        <div class="slots" id="clientSlots"></div>
+      </div>
+    </div>
+
+    <div class="card hidden" id="confirmCard">
+      <h2>Confirma tu cita</h2>
+      <div class="summary" id="summaryBox"></div>
+      <div class="grid2" style="margin-top:16px">
+        <button class="btn gc block" id="gcalBtn">📅 Agregar a Google Calendar</button>
+        <button class="btn wa block" id="waBtn">✅ Confirmar por WhatsApp</button>
+      </div>
+      <p class="note">Haz ambos pasos: agrega el evento a tu calendario y envía el WhatsApp para que Jorge confirme.</p>
+    </div>
+
+    <div class="card hidden" id="noConfig">
+      <h2>Enlace sin configurar</h2>
+      <p class="muted">Este enlace todavía no tiene disponibilidad cargada. Pídele a Jorge que genere el enlace desde el panel de Admin.</p>
+    </div>
+  </section>
+
+  <footer>ICONE ialabs · Agendamiento de acompañamiento estratégico · Julio 2026</footer>
+</div>
+
+<div class="toast" id="toast">Copiado</div>
+
+<script>
+(function(){
+  "use strict";
+  var MONTH=6, YEAR=2026; // Julio 2026 (mes 0-indexado)
+  var DOW=["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
+  var MES="julio";
+  var state={ wa:"", mail:"", dur:60, slots:{} }; // slots["2026-07-03"]=["09:00",...]
+  var adminSelDay=null;
+  var client={ who:null, sess:null, day:null, time:null };
+
+  /* ---------- utilidades ---------- */
+  function pad(n){return (n<10?"0":"")+n;}
+  function keyOf(d){return YEAR+"-"+pad(MONTH+1)+"-"+pad(d);}
+  function todayMidnight(){var t=new Date();t.setHours(0,0,0,0);return t;}
+  function b64enc(obj){return btoa(unescape(encodeURIComponent(JSON.stringify(obj))));}
+  function b64dec(s){try{return JSON.parse(decodeURIComponent(escape(atob(s))));}catch(e){return null;}}
+  function toast(m){var t=document.getElementById("toast");t.textContent=m||"Listo";t.classList.add("show");setTimeout(function(){t.classList.remove("show");},1600);}
+  function fmtLong(d){ // d = número de día
+    var date=new Date(YEAR,MONTH,d);
+    return DOW[date.getDay()]+" "+d+" de "+MES;
+  }
+  function fmt12(t){ // "14:00" -> "2:00 p.m."
+    var p=t.split(":"),h=parseInt(p[0],10),m=p[1];
+    var ap=h<12?"a.m.":"p.m.";var h12=h%12; if(h12===0)h12=12;
+    return h12+":"+m+" "+ap;
+  }
+  function addMin(t,min){
+    var p=t.split(":"),d=new Date(YEAR,MONTH,1,parseInt(p[0],10),parseInt(p[1],10));
+    d.setMinutes(d.getMinutes()+min);
+    return pad(d.getHours())+":"+pad(d.getMinutes());
+  }
+
+  /* ---------- render calendario ---------- */
+  function buildCal(elId, mode){
+    var el=document.getElementById(elId); el.innerHTML="";
+    for(var i=0;i<7;i++){var h=document.createElement("div");h.className="dow";h.textContent=DOW[i];el.appendChild(h);}
+    var first=new Date(YEAR,MONTH,1).getDay();
+    var days=new Date(YEAR,MONTH+1,0).getDate();
+    for(var e=0;e<first;e++){var em=document.createElement("div");em.className="day empty";el.appendChild(em);}
+    var tm=todayMidnight();
+    for(var d=1;d<=days;d++){
+      var cell=document.createElement("div"); cell.className="day"; cell.dataset.day=d;
+      var num=document.createElement("div"); num.textContent=d; cell.appendChild(num);
+      var cellDate=new Date(YEAR,MONTH,d);
+      var isPast=cellDate<tm;
+      var slots=state.slots[keyOf(d)]||[];
+      if(mode==="admin"){
+        if(isPast){cell.classList.add("past");}
+        else{
+          if(slots.length){cell.classList.add("has");var c=document.createElement("div");c.className="cnt";c.textContent=slots.length;cell.appendChild(c);}
+          (function(dd,cc){cc.addEventListener("click",function(){selectAdminDay(dd);});})(d,cell);
+        }
+      } else {
+        if(isPast || slots.length===0){cell.classList.add("past");}
+        else{
+          cell.classList.add("has");
+          var dot=document.createElement("div");dot.className="dot";cell.appendChild(dot);
+          (function(dd,cc){cc.addEventListener("click",function(){selectClientDay(dd);});})(d,cell);
+        }
+      }
+      el.appendChild(cell);
+    }
+  }
+
+  /* ---------- ADMIN ---------- */
+  function selectAdminDay(d){
+    adminSelDay=d;
+    document.querySelectorAll("#adminCal .day").forEach(function(c){c.classList.remove("sel");});
+    var cell=document.querySelector('#adminCal .day[data-day="'+d+'"]'); if(cell)cell.classList.add("sel");
+    document.getElementById("adminDayPanel").classList.remove("hidden");
+    document.getElementById("adminDayLabel").textContent=fmtLong(d);
+    renderAdminSlots();
+  }
+  function renderAdminSlots(){
+    var wrap=document.getElementById("adminSlots"); wrap.innerHTML="";
+    var arr=(state.slots[keyOf(adminSelDay)]||[]).slice().sort();
+    if(!arr.length){wrap.innerHTML='<span class="muted">Sin horarios para este día todavía.</span>';}
+    arr.forEach(function(t){
+      var chip=document.createElement("span");chip.className="chip";
+      chip.innerHTML='🕒 '+fmt12(t)+' ';
+      var x=document.createElement("button");x.textContent="✕";
+      x.addEventListener("click",function(){removeSlot(t);});
+      chip.appendChild(x); wrap.appendChild(chip);
+    });
+  }
+  function addSlot(){
+    if(adminSelDay==null){toast("Elige un día primero");return;}
+    var t=document.getElementById("timeInput").value; if(!t)return;
+    var k=keyOf(adminSelDay);
+    if(!state.slots[k])state.slots[k]=[];
+    if(state.slots[k].indexOf(t)===-1)state.slots[k].push(t);
+    renderAdminSlots(); buildCal("adminCal","admin"); reSelectAdmin(); updateAdminSummary();
+  }
+  function removeSlot(t){
+    var k=keyOf(adminSelDay);
+    state.slots[k]=(state.slots[k]||[]).filter(function(x){return x!==t;});
+    if(!state.slots[k].length)delete state.slots[k];
+    renderAdminSlots(); buildCal("adminCal","admin"); reSelectAdmin(); updateAdminSummary();
+  }
+  function reSelectAdmin(){
+    var cell=document.querySelector('#adminCal .day[data-day="'+adminSelDay+'"]');
+    if(cell)cell.classList.add("sel");
+  }
+  function updateAdminSummary(){
+    var days=Object.keys(state.slots).length;
+    var total=0;Object.keys(state.slots).forEach(function(k){total+=state.slots[k].length;});
+    var el=document.getElementById("adminSummaryLine");
+    if(!total){el.textContent="Aún no has añadido horarios.";}
+    else{el.innerHTML="Tienes <b style='color:var(--cyan)'>"+total+"</b> horario(s) disponibles en <b style='color:var(--cyan)'>"+days+"</b> día(s).";}
+  }
+  function readContacts(){
+    state.wa=document.getElementById("waNumber").value.replace(/[^0-9]/g,"");
+    state.mail=document.getElementById("gEmail").value.trim();
+    state.dur=parseInt(document.getElementById("dur").value,10)||60;
+  }
+  function genLink(){
+    readContacts();
+    var total=0;Object.keys(state.slots).forEach(function(k){total+=state.slots[k].length;});
+    if(!total){toast("Añade al menos un horario");return;}
+    if(!state.wa){toast("Escribe tu WhatsApp");return;}
+    var payload={wa:state.wa,mail:state.mail,dur:state.dur,slots:state.slots};
+    var base=location.href.split("#")[0];
+    var link=base+"#c="+b64enc(payload);
+    document.getElementById("clientLink").value=link;
+    document.getElementById("linkResult").classList.remove("hidden");
+    document.getElementById("waShareBox").classList.remove("hidden");
+    document.getElementById("linkHelp").classList.remove("hidden");
+    // botón compartir
+    var msg="Hola, este es el enlace para que agendes tus sesiones de acompañamiento estratégico (2, 3 y 4). Elige el horario que prefieras: "+link;
+    document.getElementById("waShareDiego").onclick=function(){
+      window.open("https://wa.me/?text="+encodeURIComponent(msg),"_blank");
+    };
+    toast("Enlace generado");
+  }
+
+  /* ---------- CLIENTE ---------- */
+  function selectClientDay(d){
+    client.day=d; client.time=null;
+    document.querySelectorAll("#clientCal .day").forEach(function(c){c.classList.remove("sel");});
+    var cell=document.querySelector('#clientCal .day[data-day="'+d+'"]'); if(cell)cell.classList.add("sel");
+    document.getElementById("clientSlotsWrap").classList.remove("hidden");
+    document.getElementById("clientDayLabel").textContent=fmtLong(d);
+    var wrap=document.getElementById("clientSlots"); wrap.innerHTML="";
+    (state.slots[keyOf(d)]||[]).slice().sort().forEach(function(t){
+      var s=document.createElement("div");s.className="slot";s.textContent=fmt12(t);
+      s.addEventListener("click",function(){
+        client.time=t;
+        document.querySelectorAll("#clientSlots .slot").forEach(function(x){x.classList.remove("sel");});
+        s.classList.add("sel");
+        renderConfirm();
+      });
+      wrap.appendChild(s);
+    });
+    renderConfirm();
+  }
+  function renderConfirm(){
+    var ok=client.who&&client.sess&&client.day&&client.time;
+    var card=document.getElementById("confirmCard");
+    if(!ok){card.classList.add("hidden");return;}
+    card.classList.remove("hidden");
+    var box=document.getElementById("summaryBox");
+    box.innerHTML=
+      row("Quién",client.who)+
+      row("Sesión",client.sess)+
+      row("Fecha",fmtLong(client.day)+" de "+YEAR)+
+      row("Hora",fmt12(client.time)+" ("+state.dur+" min)");
+    card.scrollIntoView({behavior:"smooth",block:"nearest"});
+  }
+  function row(a,b){return '<div class="row"><span class="muted">'+a+'</span><b>'+b+'</b></div>';}
+
+  function gcalUrl(){
+    var start=YEAR+pad(MONTH+1)+pad(client.day)+"T"+client.time.replace(":","")+"00";
+    var endT=addMin(client.time,state.dur);
+    var end=YEAR+pad(MONTH+1)+pad(client.day)+"T"+endT.replace(":","")+"00";
+    var title="Acompañamiento Estratégico · "+client.sess+" · "+client.who;
+    var details="Sesión de acompañamiento estratégico con Jorge Hugo Pérez (ICONE ialabs).\nParticipante: "+client.who+"\n"+client.sess;
+    var u="https://calendar.google.com/calendar/render?action=TEMPLATE"+
+      "&text="+encodeURIComponent(title)+
+      "&dates="+start+"/"+end+
+      "&ctz=America/Bogota"+
+      "&details="+encodeURIComponent(details)+
+      "&location="+encodeURIComponent("Sesión virtual");
+    if(state.mail)u+="&add="+encodeURIComponent(state.mail);
+    return u;
+  }
+  function waUrl(){
+    var msg="Hola Jorge 👋 Quiero confirmar mi cita de acompañamiento estratégico:\\n"+
+      "• Quién: "+client.who+"\\n"+
+      "• "+client.sess+"\\n"+
+      "• Fecha: "+fmtLong(client.day)+" de "+YEAR+"\\n"+
+      "• Hora: "+fmt12(client.time)+" ("+state.dur+" min)\\n"+
+      "Ya lo agregué a mi calendario. ¿Me confirmas?";
+    var base=state.wa?("https://wa.me/"+state.wa):"https://wa.me/";
+    return base+"?text="+encodeURIComponent(msg.replace(/\\n/g,"\n"));
+  }
+
+  /* ---------- init ---------- */
+  function showMode(mode){
+    var admin=mode==="admin";
+    document.getElementById("adminView").classList.toggle("hidden",!admin);
+    document.getElementById("clientView").classList.toggle("hidden",admin);
+    document.getElementById("btnAdmin").classList.toggle("active",admin);
+    document.getElementById("btnClient").classList.toggle("active",!admin);
+    if(admin){buildCal("adminCal","admin");updateAdminSummary();}
+    else{initClient();}
+  }
+  function initClient(){
+    var has=Object.keys(state.slots).length>0;
+    document.getElementById("noConfig").classList.toggle("hidden",has);
+    document.getElementById("sessCard").classList.toggle("hidden",!has);
+    document.getElementById("calCard").classList.toggle("hidden",!has);
+    if(has)buildCal("clientCal","client");
+  }
+
+  function loadFromHash(){
+    var h=location.hash||"";
+    var m=h.match(/c=([^&]+)/);
+    if(m){
+      var obj=b64dec(m[1]);
+      if(obj){state.wa=obj.wa||"";state.mail=obj.mail||"";state.dur=obj.dur||60;state.slots=obj.slots||{};return true;}
+    }
+    return false;
+  }
+
+  // eventos admin
+  document.getElementById("addSlot").addEventListener("click",addSlot);
+  document.getElementById("timeInput").addEventListener("keydown",function(e){if(e.key==="Enter")addSlot();});
+  document.getElementById("genLink").addEventListener("click",genLink);
+  document.getElementById("copyLink").addEventListener("click",function(){
+    var i=document.getElementById("clientLink");i.select();
+    navigator.clipboard.writeText(i.value).then(function(){toast("Enlace copiado");},function(){document.execCommand("copy");toast("Enlace copiado");});
+  });
+  // eventos cliente
+  document.getElementById("whoPick").addEventListener("click",function(e){
+    var o=e.target.closest(".opt");if(!o)return;
+    document.querySelectorAll("#whoPick .opt").forEach(function(x){x.classList.remove("sel");});
+    o.classList.add("sel");client.who=o.dataset.who;renderConfirm();
+  });
+  document.getElementById("sessPick").addEventListener("click",function(e){
+    var o=e.target.closest(".opt");if(!o)return;
+    document.querySelectorAll("#sessPick .opt").forEach(function(x){x.classList.remove("sel");});
+    o.classList.add("sel");client.sess=o.dataset.sess;renderConfirm();
+  });
+  document.getElementById("gcalBtn").addEventListener("click",function(){window.open(gcalUrl(),"_blank");});
+  document.getElementById("waBtn").addEventListener("click",function(){window.open(waUrl(),"_blank");});
+  // switch
+  document.getElementById("btnAdmin").addEventListener("click",function(){showMode("admin");});
+  document.getElementById("btnClient").addEventListener("click",function(){showMode("client");});
+
+  // arranque: si el enlace trae config -> vista cliente; si no -> admin
+  var hasConfig=loadFromHash();
+  if(hasConfig){
+    if(state.wa)document.getElementById("waNumber").value=state.wa;
+    if(state.mail)document.getElementById("gEmail").value=state.mail;
+    document.getElementById("dur").value=state.dur;
+    showMode("client");
+  } else {
+    document.getElementById("gEmail").value="jorgeicone.com@gmail.com";
+    showMode("admin");
+  }
+})();
+</script>
+</body>
+</html>
