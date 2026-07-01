@@ -365,11 +365,6 @@
       else{toast("Cita borrada");loadCitas();}
     });
   }
-  function saveCart(){
-    if(!sb||!cart.length) return;
-    var rows=cart.map(function(it){return {quien:it.who,sesion:it.sesion,fecha:keyOf(it.y,it.m,it.day),hora:it.time,dur:state.dur};});
-    return sb.from('agenda_citas').insert(rows);
-  }
 
   /* ---- festivos Colombia ---- */
   function easter(y){var a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),mo=Math.floor((h+l-7*m+114)/31),da=((h+l-7*m+114)%31)+1;return new Date(y,mo-1,da);}
@@ -597,9 +592,18 @@
   }
   function confirmAll(){
     if(!cart.length){toast("Añade al menos una sesión");return;}
-    saveCart();
-    window.open(waAllUrl(),"_blank");
-    document.getElementById("cartNote").textContent="¡Listo! Tus sesiones quedaron registradas y avisadas a Jorge. No olvides agregarlas a tu calendario con 📅.";
+    var note=document.getElementById("cartNote");
+    if(!sb){ note.textContent="⚠️ Error de conexión. Recarga la página e intenta de nuevo."; toast("Sin conexión"); return; }
+    var rows=cart.map(function(it){return {quien:it.who,sesion:it.sesion,fecha:keyOf(it.y,it.m,it.day),hora:it.time,dur:state.dur};});
+    note.textContent="Registrando tus sesiones…";
+    sb.from("agenda_citas").insert(rows).then(function(res){
+      if(res.error){ note.textContent="⚠️ No se pudo registrar. Revisa tu internet e intenta otra vez."; toast("No se pudo registrar"); }
+      else {
+        note.textContent="¡Listo! Tus sesiones quedaron registradas ✓ y le avisamos a Jorge. No olvides agregarlas a tu calendario con 📅.";
+        toast("Registrado ✓");
+        window.open(waAllUrl(),"_blank");
+      }
+    });
   }
 
   function firstAvailable(){
