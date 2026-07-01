@@ -101,6 +101,12 @@
   .presets{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
   .preset{background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.3);color:var(--cyan);border-radius:999px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer}
   .preset:hover{background:rgba(0,212,255,.2)}
+  .hourgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:9px}
+  .hbtn{background:#08132a;border:1px solid var(--line);border-radius:11px;padding:13px 6px;text-align:center;font-weight:700;font-size:15px;cursor:pointer;transition:.15s;position:relative;user-select:none}
+  .hbtn:hover{border-color:var(--cyan);transform:translateY(-2px)}
+  .hbtn.on{background:linear-gradient(135deg,var(--cyan),var(--purple));color:#04101f;border-color:transparent}
+  .hbtn.on::after{content:"✓";position:absolute;top:4px;right:8px;font-size:11px;font-weight:800}
+  .customtime{margin-top:6px}
   .linkbox{display:flex;gap:8px;margin-top:12px}
   .linkbox input{font-size:13px}
   .pill{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700;background:rgba(0,212,255,.14);color:var(--cyan);border:1px solid rgba(0,212,255,.3)}
@@ -184,26 +190,17 @@
       <div class="cal" id="adminCal"></div>
       <div id="adminDayPanel" class="hidden">
         <div class="divider"></div>
-        <p style="margin:0 0 10px"><span class="pill" id="adminDayLabel"></span> <span class="pill red hidden" id="adminHolLabel"></span></p>
-        <div class="rowend">
-          <div>
-            <label>Momento del día (hora de inicio)</label>
-            <input id="timeInput" type="time" value="09:00">
+        <p style="margin:0 0 6px;font-size:16px"><b>Horarios del <span id="adminDayLabel" style="color:var(--cyan)"></span></b> <span class="pill red hidden" id="adminHolLabel"></span></p>
+        <p class="note" style="margin:0 0 14px">👉 Toca las horas en que <b>sí</b> puedes atender ese día. Se ponen en <b style="color:var(--cyan)">azul</b>. Toca otra vez para quitarla. Eso es todo.</p>
+        <div class="hourgrid" id="hourGrid"></div>
+        <div class="customtime">
+          <label>¿Necesitas una hora que no está arriba? (ej. 1:30 p.m.)</label>
+          <div class="rowend">
+            <div><input id="timeInput" type="time" value="13:30"></div>
+            <button class="btn ghost" id="addSlot">+ Añadir esa hora</button>
           </div>
-          <button class="btn primary" id="addSlot">+ Añadir hora</button>
         </div>
-        <div class="presets" id="presets">
-          <span class="preset" data-t="08:00">08:00</span>
-          <span class="preset" data-t="09:00">09:00</span>
-          <span class="preset" data-t="10:00">10:00</span>
-          <span class="preset" data-t="11:00">11:00</span>
-          <span class="preset" data-t="14:00">14:00</span>
-          <span class="preset" data-t="15:00">15:00</span>
-          <span class="preset" data-t="16:00">16:00</span>
-          <span class="preset" data-t="18:00">18:00</span>
-        </div>
-        <div id="adminSlots" style="margin-top:12px"></div>
-        <p class="note">Puedes añadir todos los momentos que quieras al mismo día (ej. 08:00, 11:00, 15:00 y 18:00). Cada uno será una opción que el cliente podrá elegir.</p>
+        <p class="note" id="hourCount" style="margin-top:12px"></p>
       </div>
     </div>
 
@@ -414,19 +411,33 @@
     var hol=holidays(curY)[keyOf(curY,curM,d)];
     var hl=document.getElementById("adminHolLabel");
     if(hol){hl.textContent="Festivo: "+hol;hl.classList.remove("hidden");}else{hl.classList.add("hidden");}
-    renderAdminSlots();
+    renderHourGrid();
+    document.getElementById("adminDayPanel").scrollIntoView({behavior:"smooth",block:"nearest"});
   }
-  function renderAdminSlots(){
-    var wrap=document.getElementById("adminSlots"); wrap.innerHTML="";
-    var arr=(state.slots[keyOf(curY,curM,adminSelDay)]||[]).slice().sort();
-    if(!arr.length){wrap.innerHTML='<span class="muted">Sin horarios para este día todavía.</span>';}
-    arr.forEach(function(t){
-      var chip=document.createElement("span");chip.className="chip";
-      chip.innerHTML='🕒 '+fmt12(t)+' ';
-      var x=document.createElement("button");x.textContent="✕";
-      x.addEventListener("click",function(){removeSlot(t);});
-      chip.appendChild(x); wrap.appendChild(chip);
+  var BASE_HOURS=["06:00","07:00","08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00","21:00"];
+  function renderHourGrid(){
+    var grid=document.getElementById("hourGrid");grid.innerHTML="";
+    var k=keyOf(curY,curM,adminSelDay);
+    var sel=(state.slots[k]||[]).slice();
+    var list=BASE_HOURS.slice();
+    sel.forEach(function(t){if(list.indexOf(t)===-1)list.push(t);});
+    list.sort();
+    list.forEach(function(t){
+      var b=document.createElement("div");b.className="hbtn"+(sel.indexOf(t)>-1?" on":"");
+      b.textContent=fmt12(t);
+      b.addEventListener("click",function(){toggleHour(t);});
+      grid.appendChild(b);
     });
+    var n=sel.length;
+    document.getElementById("hourCount").innerHTML=n?("✅ <b style='color:var(--cyan)'>"+n+"</b> horario(s) marcados para este día."):"Aún no has marcado horas para este día.";
+  }
+  function toggleHour(t){
+    var k=keyOf(curY,curM,adminSelDay);
+    if(!state.slots[k])state.slots[k]=[];
+    var i=state.slots[k].indexOf(t);
+    if(i>-1){state.slots[k].splice(i,1);if(!state.slots[k].length)delete state.slots[k];}
+    else state.slots[k].push(t);
+    renderHourGrid(); buildCal("adminCal","admin"); reSelectAdmin(); updateAdminSummary();
   }
   function addTime(t){
     if(adminSelDay==null){toast("Elige un día primero");return;}
@@ -434,13 +445,7 @@
     var k=keyOf(curY,curM,adminSelDay);
     if(!state.slots[k])state.slots[k]=[];
     if(state.slots[k].indexOf(t)===-1)state.slots[k].push(t);
-    renderAdminSlots(); buildCal("adminCal","admin"); reSelectAdmin(); updateAdminSummary();
-  }
-  function removeSlot(t){
-    var k=keyOf(curY,curM,adminSelDay);
-    state.slots[k]=(state.slots[k]||[]).filter(function(x){return x!==t;});
-    if(!state.slots[k].length)delete state.slots[k];
-    renderAdminSlots(); buildCal("adminCal","admin"); reSelectAdmin(); updateAdminSummary();
+    renderHourGrid(); buildCal("adminCal","admin"); reSelectAdmin(); updateAdminSummary(); toast("Hora añadida");
   }
   function reSelectAdmin(){var cell=document.querySelector('#adminCal .day[data-day="'+adminSelDay+'"]');if(cell)cell.classList.add("sel");}
   function updateAdminSummary(){
@@ -562,7 +567,6 @@
 
   document.getElementById("addSlot").addEventListener("click",function(){addTime(document.getElementById("timeInput").value);});
   document.getElementById("timeInput").addEventListener("keydown",function(e){if(e.key==="Enter")addTime(this.value);});
-  document.getElementById("presets").addEventListener("click",function(e){var p=e.target.closest(".preset");if(p)addTime(p.dataset.t);});
   document.getElementById("genLink").addEventListener("click",genLink);
   document.getElementById("copyLink").addEventListener("click",function(){
     var i=document.getElementById("clientLink");i.select();
@@ -610,16 +614,4 @@
       var mdx=a.x-mouse.x,mdy=a.y-mouse.y,md=Math.sqrt(mdx*mdx+mdy*mdy);
       if(md<MAXD*1.5){var mal=(1-md/(MAXD*1.5))*.55;x.strokeStyle="rgba(123,47,255,"+mal+")";x.lineWidth=.9*dpr;x.beginPath();x.moveTo(a.x,a.y);x.lineTo(mouse.x,mouse.y);x.stroke();}
     }
-    for(var n2=0;n2<nodes.length;n2++){var n=nodes[n2];n.x+=n.vx;n.y+=n.vy;
-      if(n.x<0||n.x>w)n.vx*=-1; if(n.y<0||n.y>h)n.vy*=-1;
-      x.fillStyle="rgba(0,212,255,.9)";x.beginPath();x.arc(n.x,n.y,n.r,0,6.2832);x.fill();
-      x.fillStyle="rgba(0,212,255,.10)";x.beginPath();x.arc(n.x,n.y,n.r*3.2,0,6.2832);x.fill();}
-    for(var p=0;p<parts.length;p++){var pt=parts[p];pt.x+=pt.vx;pt.y+=pt.vy;if(pt.y<0){pt.y=h;pt.x=Math.random()*w;}
-      x.fillStyle="rgba(255,140,0,"+pt.a*.5+")";x.beginPath();x.arc(pt.x,pt.y,pt.r,0,6.2832);x.fill();}
-    requestAnimationFrame(loop);
-  }
-  loop();
-})();
-</script>
-</body>
-</html>
+    for(var n2=0
