@@ -221,7 +221,7 @@
 
   <section id="clientView" class="hidden">
     <h1>Agenda tus <span>sesiones</span> de acompañamiento</h1>
-    <p class="sub">Elige quién eres, la sesión y el horario que más te convenga. Al confirmar se agenda en calendario y se avisa a Jorge.</p>
+    <p class="sub">Elige quién eres y agenda tus sesiones (2, 3 y 4). Añade cada una con su día y hora a tu lista, y al final confirma todas juntas.</p>
 
     <div class="steps">
       <div class="step"><b>1.</b> ¿Quién eres?</div>
@@ -268,13 +268,18 @@
     </div>
 
     <div class="card hidden" id="confirmCard">
-      <h2>Confirma tu cita</h2>
+      <h2>Sesión seleccionada</h2>
       <div class="summary" id="summaryBox"></div>
-      <div class="grid2" style="margin-top:16px">
-        <button class="btn gc block" id="gcalBtn">📅 Agregar a Google Calendar</button>
-        <button class="btn wa block" id="waBtn">✅ Confirmar por WhatsApp</button>
-      </div>
-      <p class="note" id="confirmNote">Haz ambos pasos: agrega el evento a tu calendario y envía el WhatsApp para que Jorge confirme.</p>
+      <button class="btn primary block" id="addCartBtn" style="margin-top:16px">➕ Añadir esta sesión a mi lista</button>
+      <p class="note">Puedes agendar tus 3 sesiones. Añade cada una (2, 3 y 4) y al final confirma todas juntas.</p>
+    </div>
+
+    <div class="card hidden" id="cartCard">
+      <h2>Tus sesiones a agendar</h2>
+      <div id="cartList"></div>
+      <div class="divider"></div>
+      <button class="btn wa block" id="confirmAllBtn">✅ Confirmar y avisar a Jorge por WhatsApp</button>
+      <p class="note" id="cartNote">Con el botón 📅 de cada sesión la agregas a tu Google Calendar.</p>
     </div>
 
     <div class="card hidden" id="noConfig">
@@ -303,6 +308,7 @@
   var curY, curM;
   var adminSelDay=null;
   var client={ who:null, sess:null, y:null, m:null, day:null, time:null, saved:false };
+  var cart=[];
   var holCache={};
 
   function pad(n){return (n<10?"0":"")+n;}
@@ -540,6 +546,74 @@
     return base+"?text="+encodeURIComponent(msg);
   }
 
+  /* ---- carrito de sesiones (permite agendar las 3) ---- */
+  function gcalUrlForItem(it){
+    var start=it.y+pad(it.m+1)+pad(it.day)+"T"+it.time.replace(":","")+"00";
+    var endT=addMin(it.time,state.dur);
+    var end=it.y+pad(it.m+1)+pad(it.day)+"T"+endT.replace(":","")+"00";
+    var title="Acompañamiento Estratégico · "+it.sesion+" · "+it.who;
+    var details="Sesión de acompañamiento estratégico con Jorge Hugo Pérez (ICONE ialabs).\nParticipante: "+it.who+"\n"+it.sesion;
+    var u="https://calendar.google.com/calendar/render?action=TEMPLATE&text="+encodeURIComponent(title)+"&dates="+start+"/"+end+"&ctz=America/Bogota&details="+encodeURIComponent(details)+"&location="+encodeURIComponent("Sesión virtual");
+    if(state.mail)u+="&add="+encodeURIComponent(state.mail);
+    return u;
+  }
+  function markSessions(){
+    document.querySelectorAll("#sessPick .opt").forEach(function(o){
+      var used=cart.some(function(it){return it.sesion===o.dataset.sess;});
+      o.style.opacity=used?".4":"1";
+      o.dataset.used=used?"1":"";
+    });
+  }
+  function addToCart(){
+    if(!(client.who&&client.sess&&client.day&&client.time)){toast("Elige sesión, día y hora");return;}
+    if(cart.some(function(it){return it.sesion===client.sess;})){toast("Esa sesión ya está en tu lista");return;}
+    cart.push({who:client.who,sesion:client.sess,y:client.y,m:client.m,day:client.day,time:client.time});
+    client.sess=null;client.day=null;client.time=null;
+    document.querySelectorAll("#sessPick .opt").forEach(function(x){x.classList.remove("sel");});
+    document.querySelectorAll("#clientCal .day").forEach(function(x){x.classList.remove("sel");});
+    document.getElementById("clientSlotsWrap").classList.add("hidden");
+    document.getElementById("confirmCard").classList.add("hidden");
+    renderCart();
+    toast("Sesión añadida");
+  }
+  function renderCart(){
+    var card=document.getElementById("cartCard");
+    var list=document.getElementById("cartList");
+    markSessions();
+    if(!cart.length){card.classList.add("hidden");list.innerHTML="";return;}
+    card.classList.remove("hidden");
+    list.innerHTML="";
+    cart.forEach(function(it,idx){
+      var div=document.createElement("div");div.className="citarow";
+      var left=document.createElement("span");left.innerHTML="<b>"+it.sesion+"</b> · "+fmtLong(it.y,it.m,it.day)+" · "+fmt12(it.time);
+      var right=document.createElement("span");right.style.display="flex";right.style.gap="8px";
+      var gc=document.createElement("button");gc.className="btn gc";gc.style.padding="7px 11px";gc.style.fontSize="13px";gc.textContent="📅";gc.title="Agregar a Google Calendar";
+      gc.addEventListener("click",function(){window.open(gcalUrlForItem(it),"_blank");});
+      var rm=document.createElement("button");rm.className="btn ghost";rm.style.padding="7px 11px";rm.style.fontSize="13px";rm.textContent="✕";rm.title="Quitar";
+      rm.addEventListener("click",function(){cart.splice(idx,1);renderCart();});
+      right.appendChild(gc);right.appendChild(rm);
+      div.appendChild(left);div.appendChild(right);
+      list.appendChild(div);
+    });
+    card.scrollIntoView({behavior:"smooth",block:"nearest"});
+  }
+  function waAllUrl(){
+    var lines=cart.map(function(it){return "• "+it.sesion+": "+fmtLong(it.y,it.m,it.day)+" a las "+fmt12(it.time);});
+    var quien=cart.length?cart[0].who:"";
+    var msg="Hola Jorge 👋 Confirmo mis sesiones de acompañamiento estratégico ("+quien+"):\n"+lines.join("\n")+"\nYa las agregué a mi calendario. ¿Me confirmas?";
+    var base=state.wa?("https://wa.me/"+state.wa):"https://wa.me/";
+    return base+"?text="+encodeURIComponent(msg);
+  }
+  function confirmAll(){
+    if(!cart.length){toast("Añade al menos una sesión");return;}
+    if(sb){
+      var rows=cart.map(function(it){return {quien:it.who,sesion:it.sesion,fecha:keyOf(it.y,it.m,it.day),hora:it.time,dur:state.dur};});
+      sb.from("agenda_citas").insert(rows).then(function(){});
+    }
+    window.open(waAllUrl(),"_blank");
+    document.getElementById("cartNote").textContent="¡Listo! Tus sesiones quedaron registradas y avisadas a Jorge. No olvides agregarlas a tu calendario con 📅.";
+  }
+
   function firstAvailable(){
     var keys=Object.keys(state.slots).sort();
     if(!keys.length)return null;
@@ -587,9 +661,9 @@
   });
   document.querySelectorAll(".navbtn").forEach(function(b){b.addEventListener("click",function(){navMonth(b.dataset.nav,parseInt(b.dataset.dir,10));});});
   document.getElementById("whoPick").addEventListener("click",function(e){var o=e.target.closest(".opt");if(!o)return;document.querySelectorAll("#whoPick .opt").forEach(function(x){x.classList.remove("sel");});o.classList.add("sel");client.who=o.dataset.who;client.saved=false;renderConfirm();});
-  document.getElementById("sessPick").addEventListener("click",function(e){var o=e.target.closest(".opt");if(!o)return;document.querySelectorAll("#sessPick .opt").forEach(function(x){x.classList.remove("sel");});o.classList.add("sel");client.sess=o.dataset.sess;client.saved=false;renderConfirm();});
-  document.getElementById("gcalBtn").addEventListener("click",function(){window.open(gcalUrl(),"_blank");saveCita();document.getElementById("confirmNote").textContent="¡Listo! Tu cita quedó registrada y avisada a Jorge.";});
-  document.getElementById("waBtn").addEventListener("click",function(){window.open(waUrl(),"_blank");saveCita();document.getElementById("confirmNote").textContent="¡Listo! Tu cita quedó registrada y avisada a Jorge.";});
+  document.getElementById("sessPick").addEventListener("click",function(e){var o=e.target.closest(".opt");if(!o)return;if(o.dataset.used==="1"){toast("Esa sesión ya está en tu lista");return;}document.querySelectorAll("#sessPick .opt").forEach(function(x){x.classList.remove("sel");});o.classList.add("sel");client.sess=o.dataset.sess;client.saved=false;renderConfirm();});
+  document.getElementById("addCartBtn").addEventListener("click",addToCart);
+  document.getElementById("confirmAllBtn").addEventListener("click",confirmAll);
   document.getElementById("btnAdmin").addEventListener("click",function(){showMode("admin");});
   document.getElementById("btnClient").addEventListener("click",function(){showMode("client");});
 
